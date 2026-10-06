@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Search, MapPin, Phone, Heart, X, SlidersHorizontal, Navigation, Compass, Map as MapIcon, CalendarDays, User, Plus } from "lucide-react";
+import { Search, MapPin, Phone, Heart, X, SlidersHorizontal, Navigation, Compass, Map as MapIcon, CalendarDays, User, Plus, ChevronLeft, ChevronRight, ClipboardList, BarChart3, Bell, Settings } from "lucide-react";
 
 /* ============ 資料（全部為測試用 mock data，非真實院所） ============ */
 // qualifiedSelfPayServices 目前為測試資料；未來以正式「合格自費名冊 PDF」更新。空陣列 = 尚未確認。
@@ -126,7 +126,7 @@ function ClinicDetail({ x, fav, onFav, onClose }) {
           <h2>{x.name}</h2>
           <button className="icon" aria-label="關閉" onClick={onClose}><X size={22} /></button>
         </div>
-        <div className="banner">此為測試資料，未經驗證，請勿作為就醫依據。</div>
+        <div className="sheet-body"><div className="banner">此為測試資料，未經驗證，請勿作為就醫依據。</div>
         <dl>
           <dt>行政區</dt><dd>{x.city}{x.district}</dd>
           <dt>地址</dt><dd>{x.address}</dd>
@@ -150,7 +150,7 @@ function ClinicDetail({ x, fav, onFav, onClose }) {
           <a className="btn" target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${x.latitude},${x.longitude}`}><Navigation size={16} /> 開啟地圖</a>
           <a className="btn" href={`tel:${x.phone.replace(/-/g, "")}`}><Phone size={16} /> 撥打電話</a>
           <button className={`btn ${fav ? "fav-on" : ""}`} onClick={() => onFav(x.id)}><Heart size={16} fill={fav ? "currentColor" : "none"} /> {fav ? "已加入最愛" : "加入最愛"}</button>
-        </div>
+        </div></div>
       </aside>
     </div>
   );
@@ -189,55 +189,45 @@ function MapPage({ favs, toggleFav }) {
 
   return (
     <>
-          <section className="panel">
-            <p className="sub">快速找到附近的兒童復健與療育服務</p>
-            <div className="searchbox">
-              <Search size={18} />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜尋院所、行政區或治療項目" />
-              {q && <button className="icon" aria-label="清除" onClick={() => setQ("")}><X size={18} /></button>}
-            </div>
-            <button className="filter-toggle" onClick={() => setShowFilters(!showFilters)}>
-              <SlidersHorizontal size={16} /> 篩選{activeCount ? `（${activeCount}）` : ""}
-            </button>
-            <div className={`filters ${showFilters ? "open" : ""}`}>
+          <main className="screen">
+        <div className="appbar">
+          <div className="ttl"><h1>{APP_NAME}</h1><span>找附近的兒童復健與療育服務</span></div>
+          <button className="iconbtn" aria-label="我的最愛" onClick={() => setShowFavs(true)}><Heart size={22} />{favs.length > 0 && <em className="badge">{favs.length}</em>}</button>
+        </div>
+        <div className="searchrow">
+          <div className="searchbox"><Search size={18} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜尋院所、行政區或治療項目" />{q && <button className="icon" aria-label="清除" onClick={() => setQ("")}><X size={18} /></button>}</div>
+          <button className="iconbtn filled" aria-label="篩選" onClick={() => setShowFilters(true)}><SlidersHorizontal size={20} />{activeCount > 0 && <em className="badge">{activeCount}</em>}</button>
+        </div>
+        <div className="mapwrap"><MapView items={results} selectedId={selectedId} onSelect={setSelectedId} onOpen={setDetailId} /></div>
+        <div className="count">{loading ? "搜尋中…" : `找到 ${results.length} 間符合條件的院所`}</div>
+        {loading ? [1, 2, 3].map((i) => <div key={i} className="card skeleton" />)
+          : results.length ? list(results)
+          : (<div className="empty"><p>沒有符合條件的院所</p><p className="hint">試試放寬治療類型，或改選其他行政區。</p><button className="btn" onClick={reset}>清除篩選</button></div>)}
+      </main>
+      {showFilters && (
+        <div className="overlay" onClick={() => setShowFilters(false)}>
+          <aside className="sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="sheet-head"><h2>篩選</h2><button className="icon" aria-label="關閉" onClick={() => setShowFilters(false)}><X size={22} /></button></div>
+            <div className="sheet-body">
               <div className="row2">
-                <label>縣市
-                  <select value={city} onChange={(e) => { setCity(e.target.value); setDistrict(""); }}>
-                    <option value="">全部縣市</option>
-                    {Object.keys(areas).map((k) => <option key={k}>{k}</option>)}
-                  </select>
-                </label>
-                <label>行政區
-                  <select value={district} onChange={(e) => setDistrict(e.target.value)} disabled={!city}>
-                    <option value="">全部行政區</option>
-                    {(areas[city] || []).map((d) => <option key={d}>{d}</option>)}
-                  </select>
-                </label>
+                <label>縣市<select value={city} onChange={(e) => { setCity(e.target.value); setDistrict(""); }}><option value="">全部縣市</option>{Object.keys(areas).map((k) => <option key={k}>{k}</option>)}</select></label>
+                <label>行政區<select value={district} onChange={(e) => setDistrict(e.target.value)} disabled={!city}><option value="">全部行政區</option>{(areas[city] || []).map((d) => <option key={d}>{d}</option>)}</select></label>
               </div>
-              <div className="group"><span>治療類型（需同時提供）</span>
-                <div className="chips">{SERVICES.map((s) => <Chip key={s} on={services.includes(s)} onClick={() => toggle(services, setServices, s)}>{s}</Chip>)}</div></div>
-              <div className="group"><span>費用／給付方式（符合任一）</span>
-                <div className="chips">{PAYMENTS.map((p) => <Chip key={p} on={payments.includes(p)} onClick={() => toggle(payments, setPayments, p)}>{p}</Chip>)}</div></div>
+              <div className="field"><span className="lbl">治療類型（需同時提供）</span><div className="chips">{SERVICES.map((x) => <Chip key={x} on={services.includes(x)} onClick={() => toggle(services, setServices, x)}>{x}</Chip>)}</div></div>
+              <div className="field"><span className="lbl">費用／給付方式（符合任一）</span><div className="chips">{PAYMENTS.map((p) => <Chip key={p} on={payments.includes(p)} onClick={() => toggle(payments, setPayments, p)}>{p}</Chip>)}</div></div>
             </div>
-          </section>
-
-          <main className="split">
-            <div className="map-col"><button className="favbtn" onClick={() => setShowFavs(true)}><Heart size={16} /> 我的最愛{favs.length ? ` (${favs.length})` : ""}</button><MapView items={results} selectedId={selectedId} onSelect={setSelectedId} onOpen={setDetailId} /></div>
-            <div className="list-col">
-              <div className="count">{loading ? "搜尋中…" : `找到 ${results.length} 間符合條件的院所`}</div>
-              {loading ? [1, 2, 3].map((i) => <div key={i} className="card skeleton" />)
-                : results.length ? list(results)
-                : (<div className="empty"><p>沒有符合條件的院所</p><p className="hint">試試放寬治療類型，或改選其他行政區。</p><button className="btn" onClick={reset}>清除篩選</button></div>)}
-            </div>
-          </main>
+            <div className="sheet-foot"><button className="btn" onClick={reset}>清除</button><button className="btn fav-on" onClick={() => setShowFilters(false)}>顯示 {results.length} 間</button></div>
+          </aside>
+        </div>
+      )}
 
       {showFavs && (
-        <div className="overlay" onClick={() => setShowFavs(false)}>
-          <aside className="sheet" onClick={(e) => e.stopPropagation()}>
-            <div className="sheet-head"><h2>我的最愛（{favList.length}）</h2><button className="icon" aria-label="關閉" onClick={() => setShowFavs(false)}><X size={22} /></button></div>
+        <div className="full">
+          <div className="screen">
+            <div className="appbar"><button className="iconbtn" aria-label="返回地圖" onClick={() => setShowFavs(false)}><ChevronLeft size={22} /></button><h1>我的最愛</h1></div>
             {favList.length ? favList.map((x) => <ClinicCard key={x.id} x={x} fav onSelect={(id) => { setShowFavs(false); openClinic(id); }} onFav={toggleFav} />)
-              : <div className="empty"><p>還沒有收藏的院所</p><p className="hint">在地圖列表點愛心，就會存在這裡。</p></div>}
-          </aside>
+              : <div className="empty"><p>還沒有收藏的早療機構</p><p className="hint">找到適合的機構後，可以點擊 ♡ 收藏</p><button className="btn" onClick={() => setShowFavs(false)}>回到地圖</button></div>}
+          </div>
         </div>
       )}
       {detail && <ClinicDetail x={detail} fav={favs.includes(detail.id)} onFav={toggleFav} onClose={() => setDetailId(null)} />}
@@ -247,105 +237,78 @@ function MapPage({ favs, toggleFav }) {
 
 /* ============ 樣式 ============ */
 const CSS = `
-.app{--bg:#F5F8F4;--ink:#25332F;--mute:#68766F;--line:#DCE5DF;--pri:#2F6F6A;--pri-soft:#E1EFEC;--heart:#E0566B;
-font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.5}
-.app *{box-sizing:border-box}.app button,.app select,.app input{font:inherit;color:inherit}
-.top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
-.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px;color:var(--pri)}
-.tabs{display:flex;gap:4px}.tabs button{border:0;background:none;padding:7px 12px;border-radius:999px;display:flex;gap:5px;align-items:center;cursor:pointer;color:var(--mute)}
-.tabs button.on{background:var(--pri-soft);color:var(--pri);font-weight:600}
-.notice{background:#FFF4DC;color:#7A5A12;font-size:13px;padding:6px 16px;text-align:center}
-.panel{padding:14px 16px 10px;max-width:1280px;margin:0 auto}
-.sub{margin:0 0 10px;color:var(--mute)}
-.searchbox{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:0 12px;height:46px}
-.searchbox:focus-within{border-color:var(--pri)}.searchbox input{flex:1;border:0;outline:0;background:none;min-width:0}
-.icon{border:0;background:none;cursor:pointer;display:flex;padding:4px;color:var(--mute)}
-.filter-toggle{display:none;margin-top:10px;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:8px 14px;gap:6px;align-items:center;cursor:pointer}
-.filters{margin-top:12px;display:grid;gap:12px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:520px}
-.row2 label{display:grid;gap:4px;font-size:13px;color:var(--mute)}
-.row2 select{height:42px;border:1.5px solid var(--line);border-radius:12px;background:#fff;padding:0 10px;color:var(--ink)}
-.row2 select:disabled{opacity:.5}
-.group>span{font-size:13px;color:var(--mute)}.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;cursor:pointer}
-.chip.on{background:var(--pri);border-color:var(--pri);color:#fff}
-.split{display:grid;grid-template-columns:45fr 55fr;gap:16px;padding:0 16px 24px;max-width:1280px;margin:0 auto}
-.map-col{position:sticky;top:64px;height:calc(100vh - 80px);min-height:420px}
-.map{position:relative;width:100%;height:100%;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#EAF0EA}
-.map-bg{position:absolute;inset:0;width:100%;height:100%}
-.map-note{position:absolute;left:10px;bottom:8px;font-size:11px;color:#5d6d66;background:rgba(255,255,255,.8);padding:2px 8px;border-radius:999px}
+.app{--bg:#F6F8F6;--ink:#1F2D29;--mute:#6B7A74;--line:#E3EAE5;--pri:#2F6F6A;--pri-soft:#E3F0ED;--heart:#E0566B;
+font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;max-width:480px;margin:0 auto;font-size:15px;line-height:1.5;padding-bottom:calc(76px + env(safe-area-inset-bottom));overflow-x:hidden;position:relative}
+.app *{box-sizing:border-box;min-width:0}.app button,.app select,.app input{font:inherit;color:inherit}.app button{-webkit-tap-highlight-color:transparent}
+.notice{background:#FFF4DC;color:#7A5A12;font-size:12px;padding:6px 16px;text-align:center}
+.screen{padding:0 16px 16px;display:grid;gap:12px;align-content:start}
+.appbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;min-height:60px;padding-top:env(safe-area-inset-top);background:var(--bg)}
+.appbar h1{flex:1;margin:0;font-size:22px;font-weight:700}.ttl{flex:1}.ttl h1{margin:0;font-size:22px}.ttl span{font-size:13px;color:var(--mute)}
+.iconbtn{position:relative;width:44px;height:44px;border-radius:14px;border:0;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);display:grid;place-items:center;cursor:pointer;flex:none}
+.iconbtn.filled{background:var(--pri);color:#fff}
+.badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--heart);color:#fff;font-size:11px;font-style:normal;display:grid;place-items:center;padding:0 4px}
+.searchrow{display:flex;gap:8px}.searchbox{flex:1;display:flex;align-items:center;gap:8px;background:#fff;border-radius:14px;padding:0 12px;height:44px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.searchbox input{flex:1;border:0;outline:0;background:none;font-size:16px;height:auto;padding:0}
+.icon{border:0;background:none;cursor:pointer;display:flex;padding:8px;color:var(--mute)}
+.mapwrap{height:240px}.map{position:relative;width:100%;height:100%;border-radius:18px;overflow:hidden;background:#EAF0EA;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.map-bg{position:absolute;inset:0;width:100%;height:100%}.map-note{position:absolute;left:10px;bottom:8px;font-size:11px;color:#5d6d66;background:rgba(255,255,255,.85);padding:2px 8px;border-radius:999px}
 .map-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--mute)}
-.pin{position:absolute;transform:translate(-50%,-100%);border:0;background:none;padding:0;color:var(--pri);cursor:pointer;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25));transition:transform .15s}
-.pin.sel{color:var(--heart);z-index:5;transform:translate(-50%,-100%) scale(1.05)}
-.popup{position:absolute;left:12px;right:12px;bottom:34px;background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.18);z-index:6;display:grid;gap:6px;max-width:360px}
-.list-col{display:grid;gap:12px;align-content:start}
+.pin{position:absolute;transform:translate(-50%,-100%);border:0;background:none;padding:0;color:var(--pri);cursor:pointer;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+.pin.sel{color:var(--heart);z-index:5}
+.popup{position:absolute;left:10px;right:10px;bottom:30px;background:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.18);z-index:6;display:grid;gap:4px}
 .count{font-weight:700;font-size:16px}
-.card{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;display:grid;gap:8px}
-.card.active{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-soft)}
-.card-top{display:flex;justify-content:space-between;gap:8px}
-.card-name{font-weight:700}.card-sub{display:flex;align-items:center;gap:3px;color:var(--mute);font-size:13px}
-.svc{font-size:14px}
-.heart{border:0;background:none;cursor:pointer;color:#9AA7A1;padding:4px;height:32px}.heart.on{color:var(--heart)}
-.tags{display:flex;flex-wrap:wrap;gap:6px}
-.tag{font-size:12px;padding:2px 9px;border-radius:999px;font-weight:600}
+.card{background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1.5px solid transparent;display:grid;gap:8px}
+.card.active{border-color:var(--pri)}.card-top{display:flex;justify-content:space-between;gap:8px}
+.card-name{font-weight:700}.card-sub{display:flex;align-items:center;gap:3px;color:var(--mute);font-size:13px}.svc{font-size:14px}.addr{font-size:13px;color:var(--mute)}
+.heart{border:0;background:none;cursor:pointer;color:#9AA7A1;width:44px;height:44px;margin:-8px -8px 0 0;display:grid;place-items:center;flex:none}.heart.on{color:var(--heart)}
+.tags,.chips{display:flex;flex-wrap:wrap;gap:8px}.tag{font-size:12px;padding:2px 9px;border-radius:999px;font-weight:600}
 .pay-nhi{background:#DDF1E4;color:#1F6B3E}.pay-q{background:#FFEBC2;color:#7A5200}.pay-self{background:#E8E6F6;color:#4A4290}.pay-unk{background:#ECECEC;color:#555}
 .tag.mock{background:#F1F1F1;color:#777;font-weight:500}.tag.have{background:var(--pri-soft);color:var(--pri)}.tag.none{background:#F3F3F3;color:#AAA;font-weight:400}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1.5px solid var(--pri);background:#fff;color:var(--pri);border-radius:12px;padding:9px 14px;cursor:pointer;text-decoration:none;font-weight:600}
-.btn.small{padding:6px 12px;justify-self:start}.btn.fav-on{background:var(--heart);border-color:var(--heart);color:#fff}
-.skeleton{height:110px;background:linear-gradient(90deg,#fff,#EEF3EF,#fff);background-size:200% 100%;animation:sk 1.2s infinite}
-@keyframes sk{to{background-position:-200% 0}}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;min-height:40px;padding:0 16px;cursor:pointer}.chip.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1.5px solid var(--pri);background:#fff;color:var(--pri);border-radius:14px;min-height:46px;padding:0 16px;cursor:pointer;text-decoration:none;font-weight:600}
+.btn.small{min-height:36px;padding:0 12px;justify-self:start}.btn.fav-on{background:var(--pri);color:#fff}.btn:disabled{opacity:.45;cursor:not-allowed}
+.mini{border:1.5px solid var(--line);background:#fff;border-radius:999px;min-height:36px;padding:0 12px;font-size:13px;cursor:pointer;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center}.mini.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.skeleton{height:110px;background:linear-gradient(90deg,#fff,#EEF3EF,#fff);background-size:200% 100%;animation:sk 1.2s infinite}@keyframes sk{to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.skeleton{animation:none}}
-.empty{text-align:center;padding:36px 16px;background:#fff;border:1.5px dashed var(--line);border-radius:16px;display:grid;gap:8px;justify-items:center}
-.empty p{margin:0;font-weight:600}.empty .hint{font-weight:400;color:var(--mute)}
-.favpage{max-width:1000px;margin:0 auto;padding:16px;display:grid;gap:12px}.favgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
-.overlay{position:fixed;inset:0;background:rgba(20,30,26,.4);z-index:50;display:flex;justify-content:flex-end}
-.sheet{background:#fff;width:min(440px,100%);height:100%;overflow:auto;padding:18px;display:grid;gap:12px;align-content:start}
-.sheet-head{display:flex;justify-content:space-between;gap:8px}.sheet h2{margin:0;font-size:19px}
-.banner{background:#FFF4DC;color:#7A5A12;border-radius:10px;padding:8px 12px;font-size:13px}
-dl{margin:0;display:grid;gap:4px}dt{font-size:13px;color:var(--mute);margin-top:8px}dd{margin:0}
-.note{font-size:13px;color:var(--mute)}
-.app{padding-bottom:76px}.ver{font-size:11px;font-weight:400;color:var(--mute);margin-left:6px}
-.bottom{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
-.bottom button{position:relative;border:0;background:none;padding:8px 0;display:grid;justify-items:center;gap:2px;font-size:12px;color:var(--mute);cursor:pointer}
-.bottom button.on{color:var(--pri);font-weight:700}.dot{position:absolute;top:6px;left:56%;width:9px;height:9px;border-radius:50%;background:var(--heart)}
-.favbtn{position:absolute;top:10px;right:10px;z-index:8;display:flex;gap:5px;align-items:center;border:0;background:#fff;border-radius:999px;padding:7px 13px;box-shadow:0 2px 8px rgba(0,0,0,.2);color:var(--heart);font-weight:600;cursor:pointer}
-.addr{font-size:13px;color:var(--mute)}
-.calpage{max-width:900px;margin:0 auto;padding:12px 16px;display:grid;gap:10px}
-.calbar{display:grid;gap:8px}.seg{display:flex;background:#fff;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;width:fit-content}
-.seg button{border:0;background:none;padding:7px 18px;cursor:pointer}.seg button.on{background:var(--pri);color:#fff}
-.nav3{display:flex;align-items:center;gap:10px}.nav3 b{min-width:110px;text-align:center}
-.mini{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:4px 11px;font-size:13px;cursor:pointer;text-decoration:none;color:var(--ink)}
-.mini.on{background:var(--pri);border-color:var(--pri);color:#fff}
-.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}.mgrid.head{text-align:center;color:var(--mute);font-size:13px}
-.cell{min-height:70px;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:3px;display:flex;flex-direction:column;gap:1px;text-align:left;cursor:pointer;overflow:hidden;font-size:13px}
-.cell i{font-style:normal;font-size:10px;background:var(--pri-soft);color:var(--pri);border-radius:4px;padding:0 3px;white-space:nowrap;overflow:hidden}
-.cell i.done{background:#DDF1E4}.cell i.cancelled,.cell i.missed{background:#eee;color:#888;text-decoration:line-through}
-.cell.dim{opacity:.45}.cell.today span{color:var(--heart);font-weight:700}.cell.sel{border-color:var(--pri);box-shadow:0 0 0 2px var(--pri-soft)}
-.daysec{display:grid;gap:8px}.daysec h3,.sec h3{margin:0;font-size:15px}.hint{color:var(--mute);margin:0;font-size:13px}
-.course{display:flex;gap:12px;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px}
-.course.done{border-color:#9ED3B0}.course.cancelled,.course.missed{opacity:.6}
-.ctime{font-weight:700;color:var(--pri);font-size:14px;text-align:center}.cbody{display:grid;gap:2px;flex:1}.cact{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.fab{position:fixed;right:18px;bottom:84px;width:56px;height:56px;border-radius:50%;border:0;background:var(--pri);color:#fff;display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer;z-index:25}
-.sec{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:10px}
-.stats{display:grid;gap:4px}.stats div{display:flex;justify-content:space-between}.stats .total{border-top:1px solid var(--line);padding-top:6px;font-weight:700}
-.rec{display:flex;gap:10px;font-size:14px;border-bottom:1px solid var(--line);padding:5px 0}.rec span:nth-child(2){flex:1}
-.step{font-weight:700;margin-top:6px}.pick{display:grid;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px;cursor:pointer;gap:2px}.pick span{font-size:13px;color:var(--mute)}
-.picked{display:flex;justify-content:space-between;align-items:center;background:var(--pri-soft);border-radius:12px;padding:10px}
-.sheet input,.sheet select{height:42px;border:1.5px solid var(--line);border-radius:12px;padding:0 10px;background:#fff;width:100%}
-.sheet .searchbox input{border:0;height:auto;padding:0}.row2 input{height:42px;border:1.5px solid var(--line);border-radius:12px;padding:0 10px;background:#fff;width:100%}
-.row2.one{display:grid;grid-template-columns:1fr;gap:4px;font-size:13px;color:var(--mute)}.btn:disabled{opacity:.45;cursor:not-allowed}
-
-.actions{display:grid;gap:8px;margin-top:8px}
-@media (max-width:820px){
- .split{grid-template-columns:1fr}.map-col{position:relative;top:0;height:300px;min-height:0}
- .filter-toggle{display:inline-flex}.filters{display:none}.filters.open{display:grid}
- .sheet{width:100%;height:auto;max-height:88vh;align-self:flex-end;border-radius:20px 20px 0 0}.overlay{align-items:flex-end}
- .row2{max-width:none}
-}
+.empty{text-align:center;padding:32px 16px;background:#fff;border-radius:16px;display:grid;gap:8px;justify-items:center}.empty p{margin:0;font-weight:600}.empty .hint{font-weight:400}
+.hint{color:var(--mute);margin:0;font-size:13px}.banner{background:#FFF4DC;color:#7A5A12;border-radius:12px;padding:8px 12px;font-size:13px}
+.full{position:fixed;top:0;bottom:calc(57px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg);overflow:auto;z-index:25}
+.overlay{position:fixed;inset:0;background:rgba(20,30,26,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}.overlay.center{align-items:center;padding:16px}
+.sheet,.modal{background:#fff;width:100%;max-width:480px;display:flex;flex-direction:column;overflow:hidden}
+.sheet{border-radius:24px 24px 0 0;max-height:90vh;padding-bottom:env(safe-area-inset-bottom)}.modal{border-radius:24px;max-height:calc(100vh - 32px)}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 8px 4px 18px;flex:none}.sheet-head h2{margin:0;font-size:19px}
+.sheet-body{overflow:auto;padding:8px 18px 16px;display:grid;gap:14px;align-content:start;-webkit-overflow-scrolling:touch}
+.sheet-foot{display:flex;gap:10px;padding:12px 18px;border-top:1px solid var(--line);flex:none}.sheet-foot .btn{flex:1}
+.field{display:grid;gap:8px}.lbl{font-size:13px;font-weight:600;color:var(--mute)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row2 label{display:grid;gap:4px;font-size:13px;color:var(--mute)}
+.sheet input,.sheet select,.inp{height:46px;border:1.5px solid var(--line);border-radius:12px;padding:0 12px;background:#fff;width:100%;font-size:16px}.sheet .searchbox input{border:0;height:auto;padding:0}
+.pick{display:grid;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;min-height:52px;cursor:pointer;gap:2px}.pick span{font-size:13px;color:var(--mute)}
+.picked{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--pri-soft);border-radius:12px;padding:10px 12px}
+dl{margin:0;display:grid;gap:4px}dt{font-size:13px;color:var(--mute);margin-top:8px}dd{margin:0}.note{font-size:13px;color:var(--mute)}.actions{display:grid;gap:8px}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.bottom button{position:relative;border:0;background:none;min-height:56px;display:grid;justify-items:center;align-content:center;gap:1px;font-size:12px;color:var(--mute);cursor:pointer}.bottom button.on{color:var(--pri);font-weight:700}
+.dot{position:absolute;top:8px;left:56%;width:9px;height:9px;border-radius:50%;background:var(--heart)}
+.nav3{display:flex;align-items:center;gap:10px}.nav3.center{justify-content:center}.nav3 b{min-width:110px;text-align:center;font-size:16px}
+.calbar{display:grid;gap:10px}.seg{display:flex;background:#fff;border-radius:12px;overflow:hidden;width:fit-content;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.seg button{border:0;background:none;min-height:40px;padding:0 20px;cursor:pointer}.seg button.on{background:var(--pri);color:#fff}
+.calcard{background:#fff;border-radius:16px;padding:8px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}.mgrid.head{text-align:center;color:var(--mute);font-size:13px;padding-bottom:4px}
+.cell{height:48px;border:1.5px solid transparent;background:none;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;font-size:15px}
+.cell.dim{opacity:.35}.cell.today span{color:var(--heart);font-weight:700}.cell.sel{background:var(--pri-soft);border-color:var(--pri)}
+.dots{display:flex;gap:2px;height:6px}.dots b{width:6px;height:6px;border-radius:50%;background:var(--pri)}.dots b.done{background:#3BA66B}.dots b.missed,.dots b.cancelled{background:#B5BDB9}
+.daysec{display:grid;gap:8px}.daysec h3,.gtitle{margin:0;font-size:14px;color:var(--mute);font-weight:600}.gtitle{margin:6px 4px -4px}
+.course{display:flex;gap:12px;align-items:flex-start;background:#fff;border-radius:16px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}.course.done{box-shadow:inset 3px 0 0 #3BA66B}.course.cancelled,.course.missed{opacity:.65}
+.ctime{font-weight:700;color:var(--pri);font-size:14px;text-align:center;min-width:44px}.cbody{display:grid;gap:2px;flex:1}.cact{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.stack{display:grid;gap:4px}
+.fab{position:fixed;right:max(16px,calc(50% - 224px));bottom:calc(72px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;border:0;background:var(--pri);color:#fff;display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer;z-index:25}
+.list{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.row{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:8px 14px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;cursor:pointer}.row:last-child{border-bottom:0}
+.ico{width:34px;height:34px;border-radius:10px;background:var(--pri-soft);color:var(--pri);display:grid;place-items:center;flex:none}.tx{flex:1;font-weight:600}.tx small{display:block;color:var(--mute);font-size:13px;font-weight:400}
+.profile{grid-template-columns:auto 1fr;align-items:center;gap:12px}.avatar{width:52px;height:52px;border-radius:50%;background:var(--pri-soft);color:var(--pri);display:grid;place-items:center}
+.stats>div{display:flex;justify-content:space-between}.stats .total{border-top:1px solid var(--line);padding-top:8px;font-weight:700}
 `;
 
 /* ============ 第二階段：個人化早療管理（日曆／我的） ============ */
-export const APP_NAME = "早早療", APP_VERSION = "0.2.0", VERSION_NAME = "個人化早療管理";
+export const APP_NAME = "早早療", APP_VERSION = "0.3.0", VERSION_NAME = "手機 App 化介面";
 const pad = (n) => String(n).padStart(2, "0");
 const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const parse = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
@@ -411,19 +374,19 @@ function CalendarPage({ therapies, setStatus, del, onAdd, weekStart, selDate, se
     <section className="daysec"><h3>{d.getMonth() + 1}/{d.getDate()}（{WD[d.getDay()]}）</h3>
       {items.length ? items.map((t) => <CourseItem key={t.id} t={t} onStatus={setStatus} onDelete={del} />) : <p className="hint">沒有課程</p>}</section>); };
   return (
-    <main className="calpage">
+    <main className="screen"><div className="appbar"><h1>我的療育行程</h1></div>
       <div className="calbar">
         <div className="seg">{[["month", "月"], ["week", "週"], ["day", "日"]].map(([k, l]) => <button key={k} className={view === k ? "on" : ""} onClick={() => setView(k)}>{l}</button>)}</div>
         <div className="nav3"><button className="mini" onClick={() => shift(-1)}>‹</button><b>{title}</b><button className="mini" onClick={() => shift(1)}>›</button><button className="mini" onClick={() => setSelDate(today)}>今天</button></div>
       </div>
       {view === "month" && (<>
-        <div className="mgrid head">{[0, 1, 2, 3, 4, 5, 6].map((i) => <div key={i}>{WD[(i + weekStart) % 7]}</div>)}</div>
+        <div className="calcard"><div className="mgrid head">{[0, 1, 2, 3, 4, 5, 6].map((i) => <div key={i}>{WD[(i + weekStart) % 7]}</div>)}</div>
         <div className="mgrid">{cells.map((ds) => { const items = byDate[ds] || []; return (
           <button key={ds} className={`cell ${ds.slice(0, 7) !== cur.slice(0, 7) ? "dim" : ""} ${ds === today ? "today" : ""} ${ds === cur ? "sel" : ""}`} onClick={() => setSelDate(ds)}>
             <span>{parse(ds).getDate()}</span>
-            {items.slice(0, 2).map((t) => <i key={t.id} className={t.status}>{t.start} {t.type.replace("治療", "")}</i>)}
-            {items.length > 2 && <i>+{items.length - 2}</i>}
+            <div className="dots">{items.slice(0, 3).map((t) => <b key={t.id} className={t.status} />)}</div>
           </button>); })}</div>
+        </div>
         <Day date={cur} />
       </>)}
       {view === "week" && weekDays.map((d) => <Day key={d} date={d} />)}
@@ -446,75 +409,100 @@ function AddCourse({ favs, defaultDate, onSave, onClose }) {
     onSave(list); setDone({ first: list[0], n, step });
   };
   return (
-    <div className="overlay" onClick={onClose}>
-      <aside className="sheet" onClick={(e) => e.stopPropagation()}>
+    <div className="overlay center" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head"><h2>新增課程</h2><button className="icon" aria-label="關閉" onClick={onClose}><X size={22} /></button></div>
         {done ? (<>
-          <div className="banner">已建立 {done.n} 堂課。</div>
-          <a className="btn" target="_blank" rel="noreferrer" href={gcalUrl(done.first, done.n, done.step)}><CalendarDays size={16} /> 加入 Google 日曆{done.n > 1 ? "（含重複）" : ""}</a>
-          <button className="btn" onClick={onClose}>完成</button>
+          <div className="sheet-body"><div className="banner">已建立 {done.n} 堂課。</div>
+            <a className="btn" target="_blank" rel="noreferrer" href={gcalUrl(done.first, done.n, done.step)}><CalendarDays size={16} /> 加入 Google 日曆{done.n > 1 ? "（含重複）" : ""}</a></div>
+          <div className="sheet-foot"><button className="btn fav-on" onClick={onClose}>完成</button></div>
         </>) : (<>
-          <div className="step">1. 選擇早療機構</div>
-          {clinic ? <div className="picked"><div><b>{clinic.name}</b><div className="addr">{clinic.address}</div></div><button className="mini" onClick={() => setClinic(null)}>更換</button></div>
-            : other ? (<>
-              <div className="searchbox"><Search size={18} /><input autoFocus value={kw} onChange={(e) => setKw(e.target.value)} placeholder="輸入機構名稱或地址" /></div>
-              {kw.trim() && (found.length ? found.map(pickRow) : <p className="hint">找不到符合的機構</p>)}
-              <button className="mini" onClick={() => setOther(false)}>返回我的最愛</button></>)
-            : (<>
-              <div className="hint">我的最愛</div>
-              {favs.length ? clinics.filter((x) => favs.includes(x.id)).map(pickRow) : <p className="hint">還沒有收藏的機構</p>}
-              <button className="btn" onClick={() => setOther(true)}>其他機構</button></>)}
-          {clinic && (<>
-            <div className="step">2. 療育類型</div>
-            <div className="chips">{typesOf(clinic).map((t) => <Chip key={t} on={f.type === t} onClick={() => set({ type: t })}>{t}</Chip>)}</div>
-            <div className="step">3. 日期與時間</div>
-            <div className="row2">
-              <label>日期<input type="date" value={f.date} onChange={(e) => set({ date: e.target.value })} /></label>
-              <label>星期<input readOnly value={f.date ? `星期${WD[parse(f.date).getDay()]}` : ""} /></label>
-              <label>開始<input type="time" value={f.start} onChange={(e) => set({ start: e.target.value })} /></label>
-              <label>結束<input type="time" value={f.end} onChange={(e) => set({ end: e.target.value })} /></label>
-              <label>重複<select value={f.repeat} onChange={(e) => set({ repeat: e.target.value })}><option value="none">單次</option><option value="weekly">每週</option><option value="biweekly">每兩週</option></select></label>
-              {f.repeat !== "none" && <label>共幾次<input type="number" min="2" max="52" value={f.count} onChange={(e) => set({ count: e.target.value })} /></label>}
+          <div className="sheet-body">
+            <div className="field"><span className="lbl">機構</span>
+              {clinic ? <div className="picked"><div><b>{clinic.name}</b><div className="addr">{clinic.address}</div></div><button className="mini" onClick={() => setClinic(null)}>更換</button></div>
+                : other ? (<>
+                  <div className="searchbox"><Search size={18} /><input autoFocus value={kw} onChange={(e) => setKw(e.target.value)} placeholder="搜尋機構名稱或地址" /></div>
+                  {kw.trim() && (found.length ? found.map(pickRow) : <p className="hint">找不到符合的機構</p>)}
+                  <button className="mini" onClick={() => setOther(false)}>返回我的最愛</button></>)
+                : (<>
+                  {favs.length ? clinics.filter((x) => favs.includes(x.id)).map(pickRow) : <p className="hint">還沒有收藏的機構</p>}
+                  <button className="btn" onClick={() => setOther(true)}>其他機構</button></>)}
             </div>
-            <label className="row2 one">備註<input value={f.note} onChange={(e) => set({ note: e.target.value })} placeholder="選填" /></label>
-            {f.start >= f.end && <p className="hint">結束時間需晚於開始時間</p>}
-            <button className="btn fav-on" disabled={!valid} onClick={save}>建立課程</button>
-          </>)}
+            <div className="field"><span className="lbl">療育類型</span>
+              {clinic ? <div className="chips">{typesOf(clinic).map((t) => <Chip key={t} on={f.type === t} onClick={() => set({ type: t })}>{t}</Chip>)}</div> : <p className="hint">請先選擇機構</p>}</div>
+            <div className="field"><span className="lbl">日期與時間</span>
+              <div className="row2">
+                <label>日期<input type="date" value={f.date} onChange={(e) => set({ date: e.target.value })} /></label>
+                <label>星期<input readOnly value={f.date ? `星期${WD[parse(f.date).getDay()]}` : ""} /></label>
+                <label>開始<input type="time" value={f.start} onChange={(e) => set({ start: e.target.value })} /></label>
+                <label>結束<input type="time" value={f.end} onChange={(e) => set({ end: e.target.value })} /></label>
+              </div>{f.start >= f.end && <p className="hint">結束時間需晚於開始時間</p>}</div>
+            <div className="field"><span className="lbl">重複</span>
+              <div className="row2">
+                <label>頻率<select value={f.repeat} onChange={(e) => set({ repeat: e.target.value })}><option value="none">單次</option><option value="weekly">每週</option><option value="biweekly">每兩週</option></select></label>
+                {f.repeat !== "none" && <label>共幾次<input type="number" min="2" max="52" value={f.count} onChange={(e) => set({ count: e.target.value })} /></label>}
+              </div></div>
+            <div className="field"><span className="lbl">備註</span><input value={f.note} onChange={(e) => set({ note: e.target.value })} placeholder="選填" /></div>
+          </div>
+          <div className="sheet-foot"><button className="btn" onClick={onClose}>取消</button><button className="btn fav-on" disabled={!valid} onClick={save}>新增課程</button></div>
         </>)}
-      </aside>
+      </div>
     </div>
   );
 }
 
-function MePage({ settings, setSettings, records, sub, setSub }) {
+function Row({ icon: I, title, sub, onClick }) {
+  return <button className="row" onClick={onClick}><span className="ico"><I size={18} /></span><span className="tx">{title}{sub && <small>{sub}</small>}</span><ChevronRight size={18} color="#9AA7A1" /></button>;
+}
+function SubPage({ title, onBack, children }) {
+  return <main className="screen"><div className="appbar"><button className="iconbtn" aria-label="返回" onClick={onBack}><ChevronLeft size={22} /></button><h1>{title}</h1></div>{children}</main>;
+}
+
+function MePage({ settings, setSettings, records, sub, setSub, therapies, setStatus, del }) {
+  const [pg, setPg] = useState(null);
   const today = fmt(new Date()), { info, status, submitted } = reminderStatus(settings, sub);
   const [month, setMonth] = useState(today.slice(0, 7));
-  const rs = records.filter((r) => r.date.startsWith(month)).sort((a, b) => b.date.localeCompare(a.date));
   const shiftM = (n) => { const [y, m] = month.split("-").map(Number), d = new Date(y, m - 1 + n, 1); setMonth(`${d.getFullYear()}-${pad(d.getMonth() + 1)}`); };
   const toggleDay = (d) => setSettings({ ...settings, reminderDays: settings.reminderDays.includes(d) ? settings.reminderDays.filter((i) => i !== d) : [...settings.reminderDays, d] });
+  const mr = records.filter((r) => r.date.startsWith(month));
+  const hist = therapies.filter((t) => t.date.startsWith(month) && t.status !== "scheduled").sort((a, b) => (b.date + b.start).localeCompare(a.date + a.start));
+  const upcoming = therapies.filter((t) => t.status === "scheduled").sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
+  const back = () => setPg(null);
+  const MonthNav = <div className="nav3 center"><button className="mini" aria-label="上個月" onClick={() => shiftM(-1)}>‹</button><b>{month.replace("-", "年")}月</b><button className="mini" aria-label="下個月" onClick={() => shiftM(1)}>›</button></div>;
+  const Stats = <div className="card stats">{SERVICES.map((x) => <div key={x}><span>{x}</span><b>{mr.filter((r) => r.type === x).length} 次</b></div>)}<div className="total"><span>本月療育</span><b>{mr.length} 次</b></div></div>;
+
+  if (pg === "courses") return <SubPage title="我的早療課程" onBack={back}>{upcoming.length ? upcoming.map((t) => <div key={t.id} className="stack"><div className="addr">{t.date.replace(/-/g, "/")}</div><CourseItem t={t} onStatus={setStatus} onDelete={del} /></div>) : <div className="empty"><p>目前沒有待上的課程</p><p className="hint">到日曆點「＋」新增課程。</p></div>}</SubPage>;
+  if (pg === "records") return <SubPage title="療育紀錄" onBack={back}>{MonthNav}
+    {hist.length ? hist.map((t) => <div key={t.id} className="course"><div className="ctime">{t.date.slice(5).replace("-", "/")}<br />{t.start}</div><div className="cbody"><b>{t.type}</b><div>{clinicOf(t.clinicId)?.name}</div></div><span className={`tag ${t.status === "done" ? "pay-nhi" : "mock"}`}>{STATUS[t.status]}</span></div>)
+      : <div className="empty"><p>這個月還沒有療育紀錄</p><p className="hint">在日曆標記課程後會出現在這裡。</p></div>}</SubPage>;
+  if (pg === "stats") return <SubPage title="療育次數統計" onBack={back}>{MonthNav}{Stats}<p className="hint">只統計已完成的療育次數。</p></SubPage>;
+  if (pg === "reminder") return <SubPage title="早療補助申請提醒" onBack={back}>
+    <div className="card"><b>{info.label}</b>
+      <div>提醒狀態：<span className={`tag ${submitted ? "pay-nhi" : status === "提醒中" ? "pay-q" : "mock"}`}>{status}</span></div>
+      <div>目前狀態：{submitted ? "已提交" : "尚未提交"}</div>
+      {status === "提醒中" && <div className="banner">{info.label.replace("療育紀錄", "")}的早療補助申請期間到了，記得準備申請資料。</div>}
+      {submitted ? <button className="btn" onClick={() => setSub({ ...sub, [info.key]: { submitted: false } })}>取消「已提交」</button>
+        : <button className="btn fav-on" onClick={() => setSub({ ...sub, [info.key]: { submitted: true, at: today } })}>已提交</button>}</div>
+    <p className="hint">僅提醒申請時間。本 App 不判定補助資格、不計算補助金額，請向承辦單位確認。</p></SubPage>;
+  if (pg === "notify") return <SubPage title="通知／提醒設定" onBack={back}><div className="card"><span className="lbl">補助申請提醒時間（App 內提醒）</span>
+    <div className="chips">{[[1, "月初"], [15, "月中"], [25, "接近月底"]].map(([d, l]) => <Chip key={d} on={settings.reminderDays.includes(d)} onClick={() => toggleDay(d)}>{l}</Chip>)}</div></div></SubPage>;
+  if (pg === "general") return <SubPage title="一般設定" onBack={back}>
+    <div className="card"><span className="lbl">暱稱</span><input className="inp" value={settings.name} onChange={(e) => setSettings({ ...settings, name: e.target.value })} placeholder="選填" /></div>
+    <div className="card"><span className="lbl">日曆每週從哪天開始</span><div className="chips">{[[1, "週一"], [0, "週日"]].map(([d, l]) => <Chip key={d} on={settings.weekStart === d} onClick={() => setSettings({ ...settings, weekStart: d })}>{l}</Chip>)}</div></div>
+    <div className="card"><span className="lbl">帳號</span><div className="chips"><button className="btn" disabled>登入</button><button className="btn" disabled>註冊</button></div><p className="hint">帳號功能之後開放</p></div></SubPage>;
+
   return (
-    <main className="favpage">
-      <p className="hint">{APP_NAME} v{APP_VERSION}｜{VERSION_NAME}</p>
-      <section className="sec"><h3>帳號</h3>
-        <div className="tags"><button className="btn" disabled>登入</button><button className="btn" disabled>註冊</button><span className="hint">帳號功能之後開放</span></div>
-        <label className="row2 one">個人資料：暱稱<input value={settings.name} onChange={(e) => setSettings({ ...settings, name: e.target.value })} placeholder="選填" /></label></section>
-      <section className="sec"><h3>一般設定</h3>
-        <div className="group"><span>通知設定：補助申請提醒時間（App 內提醒）</span>
-          <div className="chips">{[[1, "月初"], [15, "月中"], [25, "接近月底"]].map(([d, l]) => <Chip key={d} on={settings.reminderDays.includes(d)} onClick={() => toggleDay(d)}>{l}</Chip>)}</div></div>
-        <div className="group"><span>日曆設定：每週從哪天開始</span>
-          <div className="chips">{[[1, "週一"], [0, "週日"]].map(([d, l]) => <Chip key={d} on={settings.weekStart === d} onClick={() => setSettings({ ...settings, weekStart: d })}>{l}</Chip>)}</div></div></section>
-      <section className="sec"><h3>早療補助提醒</h3>
-        <div>目前週期：<b>{info.label}</b></div>
-        <div>提醒狀態：<span className={`tag ${submitted ? "pay-nhi" : status === "提醒中" ? "pay-q" : "mock"}`}>{status}</span></div>
-        {status === "提醒中" && <div className="banner">{info.label.replace("療育紀錄", "")}的早療補助申請期間到了，記得準備申請資料。</div>}
-        {submitted ? <button className="btn" onClick={() => setSub({ ...sub, [info.key]: { submitted: false } })}>取消「已提交」</button>
-          : <button className="btn fav-on" onClick={() => setSub({ ...sub, [info.key]: { submitted: true, at: today } })}>已提交</button>}
-        <p className="hint">僅提醒申請時間。本 App 不判定補助資格、不計算補助金額，請向承辦單位確認。</p></section>
-      <section className="sec"><h3>療育紀錄</h3>
-        <div className="nav3"><button className="mini" onClick={() => shiftM(-1)}>‹</button><b>{month.replace("-", "年")}月</b><button className="mini" onClick={() => shiftM(1)}>›</button></div>
-        <div className="stats">{SERVICES.map((s) => <div key={s}><span>{s}</span><b>{rs.filter((r) => r.type === s).length} 次</b></div>)}
-          <div className="total"><span>本月療育</span><b>{rs.length} 次</b></div></div>
-        {rs.length ? rs.map((r) => <div key={r.id} className="rec"><b>{r.date.slice(5).replace("-", "/")}</b><span>{clinicOf(r.clinicId)?.name}</span><span>{r.type}</span></div>) : <p className="hint">這個月還沒有完成的療育紀錄</p>}</section>
+    <main className="screen">
+      <div className="appbar"><h1>我的</h1></div>
+      <div className="card profile"><span className="avatar"><User size={26} /></span><div><b>{settings.name || "早早療使用者"}</b><div className="addr">{APP_NAME} v{APP_VERSION}｜{VERSION_NAME}</div></div></div>
+      <div className="gtitle">療育</div>
+      <div className="list"><Row icon={CalendarDays} title="我的早療課程" sub={`${upcoming.length} 堂待上`} onClick={() => setPg("courses")} />
+        <Row icon={ClipboardList} title="療育紀錄" sub={`${month.replace("-", "年")}月`} onClick={() => setPg("records")} />
+        <Row icon={BarChart3} title="療育次數統計" sub={`本月 ${records.filter((r) => r.date.startsWith(today.slice(0, 7))).length} 次`} onClick={() => setPg("stats")} /></div>
+      <div className="gtitle">提醒</div>
+      <div className="list"><Row icon={Bell} title="早療補助申請提醒" sub={status} onClick={() => setPg("reminder")} /></div>
+      <div className="gtitle">設定</div>
+      <div className="list"><Row icon={Settings} title="一般設定" onClick={() => setPg("general")} /><Row icon={Bell} title="通知／提醒設定" onClick={() => setPg("notify")} /></div>
     </main>
   );
 }
@@ -539,11 +527,10 @@ export default function App() {
   return (
     <div className="app">
       <style>{CSS}</style>
-      <header className="top"><div className="brand"><Compass size={22} /> <span>{APP_NAME}</span><small className="ver">v{APP_VERSION}</small></div></header>
       <div className="notice">目前顯示的皆為測試用 mock data，不代表真實院所資料。</div>
       {page === "map" && <MapPage favs={favs} toggleFav={toggleFav} />}
       {page === "cal" && <CalendarPage therapies={myTherapies} setStatus={setStatus} del={del} onAdd={() => setAdding(true)} weekStart={settings.weekStart} selDate={selDate} setSelDate={setSelDate} />}
-      {page === "me" && <MePage settings={settings} setSettings={setSettings} records={therapyRecords} sub={subsidyReminders} setSub={setSub} />}
+      {page === "me" && <MePage settings={settings} setSettings={setSettings} records={therapyRecords} sub={subsidyReminders} setSub={setSub} therapies={myTherapies} setStatus={setStatus} del={del} />}
       {adding && <AddCourse favs={favs} defaultDate={selDate} onSave={(l) => setMyTherapies((a) => [...a, ...l])} onClose={() => setAdding(false)} />}
       <nav className="bottom">
         {[["map", "地圖", MapIcon], ["cal", "日曆", CalendarDays], ["me", "我的", User]].map(([k, l, I]) => (
