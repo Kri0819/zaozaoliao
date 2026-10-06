@@ -238,7 +238,7 @@ function MapPage({ favs, toggleFav }) {
 /* ============ 樣式 ============ */
 const CSS = `
 .app{--bg:#FFFFFF;--surface:#F5F2ED;--ink:#2B2A28;--mute:#8A857E;--line:#EEEAE4;--pri:#4F7F7A;--pri-soft:#EAF1EF;--heart:#E07A6F;
-font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;max-width:480px;margin:0 auto;font-size:16px;line-height:1.5;padding-bottom:calc(72px + env(safe-area-inset-bottom));overflow-x:hidden;position:relative}
+font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;max-width:480px;margin:0 auto;font-size:16px;line-height:1.5;padding-bottom:calc(72px + env(safe-area-inset-bottom));overflow-x:hidden;overflow-x:clip;position:relative}
 .app *{box-sizing:border-box;min-width:0}.app button,.app select,.app input{font:inherit;color:inherit}.app button{-webkit-tap-highlight-color:transparent}
 .notice{font-size:11px;color:var(--mute);padding:6px 20px 0;text-align:center}
 .screen{padding:0 20px 24px;display:grid;gap:20px;align-content:start}
@@ -268,7 +268,7 @@ font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-ser
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;background:var(--surface);color:var(--ink);border-radius:12px;min-height:48px;padding:0 20px;cursor:pointer;text-decoration:none;font-weight:500}
 .btn.small{min-height:36px;padding:0 14px}.btn.fav-on{background:var(--pri);color:#fff;font-weight:600}.btn.text{background:none;color:var(--mute)}.btn:disabled{opacity:.4;cursor:not-allowed}
 .mini{border:0;background:none;color:var(--pri);border-radius:8px;min-height:40px;padding:0 10px;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
-.mini.on{background:var(--pri-soft)}.mini.danger{color:var(--heart)}.nav3 .mini{font-size:22px;min-width:40px;justify-content:center;color:var(--ink)}
+.mini.on{background:var(--pri-soft)}.mini.danger{color:var(--heart)}.mini.arrow{font-size:24px;min-width:40px;justify-content:center;color:var(--ink)}
 .skeleton{height:96px;background:linear-gradient(90deg,#F5F2ED,#FAF8F5,#F5F2ED);background-size:200% 100%;animation:sk 1.2s infinite;margin:8px 0;border-radius:12px}@keyframes sk{to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.skeleton{animation:none}}
 .empty{text-align:center;padding:40px 16px;display:grid;gap:8px;justify-items:center}.empty p{margin:0;font-weight:600}.empty .hint{font-weight:400}.empty .btn{margin-top:8px}
@@ -283,13 +283,18 @@ font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-ser
 .sheet-foot{display:flex;gap:12px;padding:12px 20px;flex:none}.sheet-foot .btn{flex:1;border:1.5px solid #DAD6CE;background:#fff}.sheet-foot .btn.fav-on{background:var(--pri);border-color:var(--pri);color:#fff}.sheet-foot .btn.text{flex:0 0 auto;border:0;background:none}
 .modal .sheet-head{padding:22px 16px 4px 24px}.modal .sheet-body{padding:8px 24px 16px;gap:20px}.modal .sheet-foot{padding:8px 24px 22px}
 .sess{display:grid;gap:8px;padding:14px;border:1px solid var(--line);border-radius:16px}.sess-h{display:flex;justify-content:space-between;align-items:center;min-height:32px}
+.line{display:grid;grid-template-columns:1.5fr 1fr 40px;gap:8px;align-items:center}.line input{padding-left:10px;padding-right:10px}
+.sess2{display:grid;gap:4px;padding:0 2px}.xbtn{border:0;background:none;color:var(--mute);width:40px;height:44px;display:grid;place-items:center;cursor:pointer}
+.screen.cal{gap:12px}.calbar{gap:12px}.monthrow{display:flex;justify-content:space-between;align-items:center}
+.todaybtn{border:0;background:var(--surface);border-radius:999px;min-height:36px;padding:0 16px;font-size:14px;color:var(--ink);cursor:pointer}
+.seg.full{display:grid;grid-template-columns:repeat(3,1fr);width:100%;height:42px;align-self:start}.seg.full button{min-height:0;height:100%;padding:0}
 .addrow{border:1.5px dashed #CFCAC2;background:none;border-radius:16px;min-height:52px;color:var(--pri);font-weight:600;font-size:16px;cursor:pointer}
 .donerow{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:6px 0}.ro{background:#F7F5F1!important;color:var(--mute)!important}
 .field{display:grid;gap:8px}.lbl{font-size:13px;color:var(--mute);font-weight:500}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.row2 label{display:grid;gap:6px;font-size:13px;color:var(--mute)}
 .timerow{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}.timerow i{color:var(--mute);font-style:normal}
 .sheet input,.sheet select,.modal input,.modal select,.inp{height:52px;border:1.5px solid #DAD6CE;border-radius:16px;padding:0 16px;background:#fff;width:100%;font-size:16px;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.05)}
-input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;display:block;min-height:52px;text-align:left}
+input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;display:block;height:52px;min-height:52px;padding-top:13px;padding-bottom:0;text-align:left;line-height:1.3}
 .sheet input:focus,.sheet select:focus,.modal input:focus,.modal select:focus{outline:0;border-color:var(--pri)}.modal select:disabled{color:var(--mute);background:#F7F5F1}
 .sheet .searchbox input{height:auto;min-height:0;padding:0;border:0;box-shadow:none;background:none}
 .pick{display:grid;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:12px 0;min-height:56px;cursor:pointer;gap:2px;font-size:16px}.pick span{font-size:13px;color:var(--mute)}
@@ -298,8 +303,8 @@ dl{margin:0;display:grid;gap:2px}dt{font-size:12px;color:var(--mute);margin-top:
 .bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
 .bottom button{position:relative;border:0;background:none;min-height:56px;display:grid;justify-items:center;align-content:center;gap:2px;font-size:11px;color:#A8A39B;cursor:pointer}.bottom button.on{color:var(--pri);font-weight:600}
 .dot{position:absolute;top:8px;left:56%;width:8px;height:8px;border-radius:50%;background:var(--heart)}
-.nav3{display:flex;align-items:center;gap:4px}.nav3.center{justify-content:center}.nav3 b{min-width:120px;text-align:center;font-size:17px;font-weight:600}
-.calbar{display:grid;gap:12px}.seg{display:flex;background:var(--surface);border-radius:10px;padding:3px;width:fit-content}
+.nav3{display:flex;align-items:center;gap:4px}.nav3.center{justify-content:center}.nav3 b{min-width:128px;text-align:center;font-size:19px;font-weight:600}
+.calbar{display:grid;gap:12px;align-content:start}.seg{display:flex;background:var(--surface);border-radius:10px;padding:3px;width:fit-content}
 .seg button{border:0;background:none;min-height:34px;padding:0 20px;border-radius:8px;cursor:pointer;color:var(--mute);font-size:14px}.seg button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.1)}
 .calcard{background:none;padding:0}.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:0}.mgrid.head{text-align:center;color:var(--mute);font-size:12px;padding-bottom:6px}
 .cell{height:52px;border:0;background:none;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;font-size:16px}
@@ -317,7 +322,7 @@ dl{margin:0;display:grid;gap:2px}dt{font-size:12px;color:var(--mute);margin-top:
 `;
 
 /* ============ 第二階段：個人化早療管理（日曆／我的） ============ */
-export const APP_NAME = "早早療", APP_VERSION = "0.5.0", VERSION_NAME = "新增課程改版";
+export const APP_NAME = "早早療", APP_VERSION = "0.5.2", VERSION_NAME = "日曆切換列修正";
 const pad = (n) => String(n).padStart(2, "0");
 const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const parse = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
@@ -386,10 +391,13 @@ function CalendarPage({ therapies, setStatus, del, onAdd, weekStart, selDate, se
     <section className="daysec"><h3>{d.getMonth() + 1}/{d.getDate()}（{WD[d.getDay()]}）</h3>
       {items.length ? items.map((t) => <CourseItem key={t.id} t={t} onStatus={setStatus} onDelete={del} />) : <p className="hint">沒有課程</p>}</section>); };
   return (
-    <main className="screen"><div className="appbar"><h1>我的療育行程</h1></div>
+    <main className="screen cal"><div className="appbar"><h1>我的療育行程</h1></div>
       <div className="calbar">
-        <div className="seg">{[["month", "月"], ["week", "週"], ["day", "日"]].map(([k, l]) => <button key={k} className={view === k ? "on" : ""} onClick={() => setView(k)}>{l}</button>)}</div>
-        <div className="nav3"><button className="mini" onClick={() => shift(-1)}>‹</button><b>{title}</b><button className="mini" onClick={() => shift(1)}>›</button><button className="mini" onClick={() => setSelDate(today)}>今天</button></div>
+        <div className="monthrow">
+          <div className="nav3"><button className="mini arrow" aria-label="上一頁" onClick={() => shift(-1)}>‹</button><b>{title}</b><button className="mini arrow" aria-label="下一頁" onClick={() => shift(1)}>›</button></div>
+          <button className="todaybtn" onClick={() => setSelDate(today)}>今天</button>
+        </div>
+        <div className="seg full">{[["month", "月"], ["week", "週"], ["day", "日"]].map(([k, l]) => <button key={k} className={view === k ? "on" : ""} onClick={() => setView(k)}>{l}</button>)}</div>
       </div>
       {view === "month" && (<>
         <div className="calcard"><div className="mgrid head">{[0, 1, 2, 3, 4, 5, 6].map((i) => <div key={i}>{WD[(i + weekStart) % 7]}</div>)}</div>
@@ -464,17 +472,24 @@ function AddCourse({ favs, defaultDate, onSave, onClose }) {
               {type === "其他" && <input value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="自行輸入療育類型" />}
             </div>
             <div className="field"><span className="lbl">上課日期與時間</span>
-              {rows.map((r, i) => (
+              {rows.map((r, i) => i === 0 ? (
                 <div className="sess" key={i}>
-                  <div className="sess-h"><b>第 {i + 1} 堂</b>{i > 0 && <button className="mini danger" onClick={() => setRows(rows.filter((_, j) => j !== i))}>移除</button>}</div>
+                  <div className="sess-h"><b>第 1 堂</b></div>
                   <input type="date" value={r.date} onChange={(e) => setRow(i, { date: e.target.value })} />
                   {r.date && <span className="hint">星期{WD[parse(r.date).getDay()]}</span>}
-                  <div className="timerow">
-                    <input type="time" value={r.start} onChange={(e) => setRow(i, { start: e.target.value })} /><i>—</i>
-                    {i === 0 ? <input type="time" value={r.end} onChange={(e) => setRow(0, { end: e.target.value })} /> : <input className="ro" readOnly value={endOf(r)} aria-label="結束時間（自動）" />}
+                  <div className="timerow"><input type="time" value={r.start} onChange={(e) => setRow(0, { start: e.target.value })} /><i>—</i><input type="time" value={r.end} onChange={(e) => setRow(0, { end: e.target.value })} /></div>
+                  {rows.length > 1 && dur > 0 && <span className="hint">之後的課程沿用第 1 堂時長（{dur} 分鐘）</span>}
+                </div>
+              ) : (
+                <div className="sess2" key={i}>
+                  <div className="line">
+                    <input type="date" value={r.date} onChange={(e) => setRow(i, { date: e.target.value })} />
+                    <input type="time" value={r.start} onChange={(e) => setRow(i, { start: e.target.value })} />
+                    <button className="xbtn" aria-label="移除這堂課" onClick={() => setRows(rows.filter((_, j) => j !== i))}><X size={18} /></button>
                   </div>
-                  {i === 0 && rows.length > 1 && dur > 0 && <span className="hint">之後的課程沿用第 1 堂時長（{dur} 分鐘）</span>}
-                </div>))}
+                  <span className="hint">第 {i + 1} 堂・{r.date ? `星期${WD[parse(r.date).getDay()]}・` : ""}至 {endOf(r)}</span>
+                </div>
+              ))}
               {dur <= 0 && <p className="hint">結束時間需晚於開始時間</p>}
               <button className="addrow" onClick={addRow}>＋ 新增一堂課</button>
             </div>
@@ -504,7 +519,7 @@ function MePage({ settings, setSettings, records, sub, setSub, therapies, setSta
   const hist = therapies.filter((t) => t.date.startsWith(month) && t.status !== "scheduled").sort((a, b) => (b.date + b.start).localeCompare(a.date + a.start));
   const upcoming = therapies.filter((t) => t.status === "scheduled").sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
   const back = () => setPg(null);
-  const MonthNav = <div className="nav3 center"><button className="mini" aria-label="上個月" onClick={() => shiftM(-1)}>‹</button><b>{month.replace("-", "年")}月</b><button className="mini" aria-label="下個月" onClick={() => shiftM(1)}>›</button></div>;
+  const MonthNav = <div className="nav3 center"><button className="mini arrow" aria-label="上個月" onClick={() => shiftM(-1)}>‹</button><b>{month.replace("-", "年")}月</b><button className="mini arrow" aria-label="下個月" onClick={() => shiftM(1)}>›</button></div>;
   const Stats = <div className="card stats">{SERVICES.map((x) => <div key={x}><span>{x}</span><b>{mr.filter((r) => (x === "其他治療" ? !MAIN_SERVICES.includes(r.type) : r.type === x)).length} 次</b></div>)}<div className="total"><span>本月療育</span><b>{mr.length} 次</b></div></div>;
 
   if (pg === "courses") return <SubPage title="我的早療課程" onBack={back}>{upcoming.length ? upcoming.map((t) => <div key={t.id} className="stack"><div className="addr">{t.date.replace(/-/g, "/")}</div><CourseItem t={t} onStatus={setStatus} onDelete={del} /></div>) : <div className="empty"><p>目前沒有待上的課程</p><p className="hint">到日曆點「＋」新增課程。</p></div>}</SubPage>;
