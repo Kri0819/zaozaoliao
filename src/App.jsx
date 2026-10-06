@@ -277,14 +277,21 @@ font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-ser
 .overlay{position:fixed;inset:0;background:rgba(30,28,25,.35);z-index:50;display:flex;align-items:flex-end;justify-content:center}.overlay.center{align-items:center;padding:20px}
 .sheet,.modal{background:#fff;width:100%;max-width:480px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -4px 30px rgba(0,0,0,.1)}
 .sheet{border-radius:20px 20px 0 0;max-height:90vh;padding-bottom:env(safe-area-inset-bottom)}.sheet::before{content:"";width:36px;height:4px;border-radius:2px;background:#DDD8D0;margin:8px auto 0;flex:none}
-.modal{border-radius:20px;max-height:calc(100vh - 40px)}
+.modal{border-radius:20px;max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px)}
 .sheet-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 12px 4px 20px;flex:none}.sheet-head h2{margin:0;font-size:20px;font-weight:700}
 .sheet-body{overflow:auto;padding:8px 20px 20px;display:grid;gap:20px;align-content:start;-webkit-overflow-scrolling:touch}
-.sheet-foot{display:flex;gap:8px;padding:12px 20px;flex:none}.sheet-foot .btn{flex:1}.sheet-foot .btn.text{flex:0 0 auto}
+.sheet-foot{display:flex;gap:12px;padding:12px 20px;flex:none}.sheet-foot .btn{flex:1;border:1.5px solid #DAD6CE;background:#fff}.sheet-foot .btn.fav-on{background:var(--pri);border-color:var(--pri);color:#fff}.sheet-foot .btn.text{flex:0 0 auto;border:0;background:none}
+.modal .sheet-head{padding:22px 16px 4px 24px}.modal .sheet-body{padding:8px 24px 16px;gap:20px}.modal .sheet-foot{padding:8px 24px 22px}
+.sess{display:grid;gap:8px;padding:14px;border:1px solid var(--line);border-radius:16px}.sess-h{display:flex;justify-content:space-between;align-items:center;min-height:32px}
+.addrow{border:1.5px dashed #CFCAC2;background:none;border-radius:16px;min-height:52px;color:var(--pri);font-weight:600;font-size:16px;cursor:pointer}
+.donerow{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:6px 0}.ro{background:#F7F5F1!important;color:var(--mute)!important}
 .field{display:grid;gap:8px}.lbl{font-size:13px;color:var(--mute);font-weight:500}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.row2 label{display:grid;gap:6px;font-size:13px;color:var(--mute)}
 .timerow{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}.timerow i{color:var(--mute);font-style:normal}
-.sheet input,.sheet select,.inp{height:48px;border:0;border-radius:12px;padding:0 14px;background:var(--surface);width:100%;font-size:16px;color:var(--ink)}.sheet .searchbox input{height:auto;padding:0;background:none}
+.sheet input,.sheet select,.modal input,.modal select,.inp{height:52px;border:1.5px solid #DAD6CE;border-radius:16px;padding:0 16px;background:#fff;width:100%;font-size:16px;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;display:block;min-height:52px;text-align:left}
+.sheet input:focus,.sheet select:focus,.modal input:focus,.modal select:focus{outline:0;border-color:var(--pri)}.modal select:disabled{color:var(--mute);background:#F7F5F1}
+.sheet .searchbox input{height:auto;min-height:0;padding:0;border:0;box-shadow:none;background:none}
 .pick{display:grid;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:12px 0;min-height:56px;cursor:pointer;gap:2px;font-size:16px}.pick span{font-size:13px;color:var(--mute)}
 .picked{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--surface);border-radius:12px;padding:10px 14px}
 dl{margin:0;display:grid;gap:2px}dt{font-size:12px;color:var(--mute);margin-top:14px}dd{margin:0}.note{font-size:13px;color:var(--mute)}.actions{display:grid;gap:8px}
@@ -310,7 +317,7 @@ dl{margin:0;display:grid;gap:2px}dt{font-size:12px;color:var(--mute);margin-top:
 `;
 
 /* ============ 第二階段：個人化早療管理（日曆／我的） ============ */
-export const APP_NAME = "早早療", APP_VERSION = "0.4.0", VERSION_NAME = "視覺風格重製";
+export const APP_NAME = "早早療", APP_VERSION = "0.5.0", VERSION_NAME = "新增課程改版";
 const pad = (n) => String(n).padStart(2, "0");
 const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const parse = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
@@ -401,50 +408,79 @@ function CalendarPage({ therapies, setStatus, del, onAdd, weekStart, selDate, se
   );
 }
 
+const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+const fromMin = (n) => `${pad(Math.floor(n / 60))}:${pad(n % 60)}`;
+const plusDays = (d, n) => { const x = parse(d); x.setDate(x.getDate() + n); return fmt(x); };
+
 function AddCourse({ favs, defaultDate, onSave, onClose }) {
   const [other, setOther] = useState(false), [kw, setKw] = useState(""), [clinic, setClinic] = useState(null), [done, setDone] = useState(null);
-  const [f, setF] = useState({ type: "", date: defaultDate, start: "14:00", end: "15:00", repeat: "none", count: 4, note: "" });
-  const set = (p) => setF({ ...f, ...p });
+  const [type, setType] = useState(""), [custom, setCustom] = useState(""), [note, setNote] = useState("");
+  const [rows, setRows] = useState([{ date: defaultDate, start: "14:00", end: "15:00" }]);
+  const favC = clinics.filter((x) => favs.includes(x.id));
   const found = kw.trim() ? clinics.filter((x) => (x.name + x.address).includes(kw.trim())) : []; // 只從機構資料搜尋
-  const pickRow = (x) => <button className="pick" key={x.id} onClick={() => { setClinic(x); set({ type: "" }); }}><b>{favs.includes(x.id) ? "❤️ " : ""}{x.name}</b><span>{x.address}</span></button>;
-  const valid = clinic && f.type && f.date && f.start < f.end;
+  const dur = toMin(rows[0].end) - toMin(rows[0].start); // 之後的課沿用第一堂時長
+  const endOf = (r) => (dur > 0 && r.start ? fromMin(Math.min(1439, toMin(r.start) + dur)) : "--:--");
+  const setRow = (i, p) => setRows(rows.map((r, j) => (j === i ? { ...r, ...p } : r)));
+  const addRow = () => { const l = rows[rows.length - 1]; setRows([...rows, { date: l.date ? plusDays(l.date, 7) : "", start: l.start }]); };
+  const chosenType = type === "其他" ? custom.trim() : type;
+  const okRows = dur > 0 && rows.every((r) => r.date && r.start && toMin(r.start) + dur < 1440);
+  const valid = clinic && chosenType && okRows;
+  const pickRow = (x) => <button className="pick" key={x.id} onClick={() => { setClinic(x); setType(""); }}><b>{x.name}</b><span>{x.address}</span></button>;
+  const onClinic = (v) => { setType(""); if (v === "other") { setOther(true); setClinic(null); } else { setOther(false); setClinic(v ? clinicOf(Number(v)) : null); } };
   const save = () => {
-    const step = f.repeat === "biweekly" ? 14 : 7, n = f.repeat === "none" ? 1 : Math.min(52, Math.max(2, Number(f.count) || 2)), sid = "s" + Date.now();
-    const list = Array.from({ length: n }, (_, i) => { const d = parse(f.date); d.setDate(d.getDate() + i * step); return { id: `${sid}-${i}`, seriesId: sid, clinicId: clinic.id, type: f.type, date: fmt(d), start: f.start, end: f.end, note: f.note, status: "scheduled" }; });
-    onSave(list); setDone({ first: list[0], n, step });
+    const sid = "s" + Date.now();
+    const list = rows.map((r, i) => ({ id: `${sid}-${i}`, seriesId: sid, clinicId: clinic.id, type: chosenType, date: r.date, start: r.start, end: endOf(r), note, status: "scheduled" }));
+    onSave(list); setDone(list);
   };
   return (
     <div className="overlay center" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head"><h2>新增課程</h2><button className="icon" aria-label="關閉" onClick={onClose}><X size={22} /></button></div>
         {done ? (<>
-          <div className="sheet-body"><div className="banner">已建立 {done.n} 堂課。</div>
-            <a className="btn" target="_blank" rel="noreferrer" href={gcalUrl(done.first, done.n, done.step)}><CalendarDays size={16} /> 加入 Google 日曆{done.n > 1 ? "（含重複）" : ""}</a></div>
+          <div className="sheet-body"><div className="banner">已建立 {done.length} 堂課。</div>
+            {done.map((t) => <div className="donerow" key={t.id}><span>{t.date.slice(5).replace("-", "/")} {t.start}–{t.end}</span><a className="mini" target="_blank" rel="noreferrer" href={gcalUrl(t)}>加入 Google 日曆</a></div>)}</div>
           <div className="sheet-foot"><button className="btn fav-on" onClick={onClose}>完成</button></div>
         </>) : (<>
           <div className="sheet-body">
             <div className="field"><span className="lbl">機構</span>
-              {clinic ? <div className="picked"><div><b>{clinic.name}</b><div className="addr">{clinic.address}</div></div><button className="mini" onClick={() => setClinic(null)}>更換</button></div>
-                : other ? (<>
-                  <div className="searchbox"><Search size={18} /><input autoFocus value={kw} onChange={(e) => setKw(e.target.value)} placeholder="搜尋機構名稱或地址" /></div>
-                  {kw.trim() && (found.length ? found.map(pickRow) : <p className="hint">找不到符合的機構</p>)}
-                  <button className="mini" onClick={() => setOther(false)}>返回我的最愛</button></>)
-                : (<>
-                  {favs.length ? clinics.filter((x) => favs.includes(x.id)).map(pickRow) : <p className="hint">還沒有收藏的機構</p>}
-                  <button className="btn" onClick={() => setOther(true)}>其他機構</button></>)}
+              <select value={other ? "other" : clinic ? String(clinic.id) : ""} onChange={(e) => onClinic(e.target.value)}>
+                <option value="">請選擇機構</option>
+                {favC.map((x) => <option key={x.id} value={x.id}>❤️ {x.name}</option>)}
+                <option value="other">其他機構</option>
+              </select>
+              {!other && clinic && <span className="hint">{clinic.address}</span>}
+              {other && (<>
+                <input value={kw} onChange={(e) => { setKw(e.target.value); setClinic(null); setType(""); }} placeholder="輸入機構名稱或地址" />
+                {clinic ? <div className="picked"><div><b>{clinic.name}</b><div className="addr">{clinic.address}</div></div><button className="mini" onClick={() => setClinic(null)}>更換</button></div>
+                  : kw.trim() && (found.length ? found.map(pickRow) : <p className="hint">找不到符合的機構</p>)}
+              </>)}
             </div>
             <div className="field"><span className="lbl">療育類型</span>
-              {clinic ? <div className="chips">{typesOf(clinic).map((t) => <Chip key={t} on={f.type === t} onClick={() => set({ type: t })}>{t}</Chip>)}</div> : <p className="hint">請先選擇機構</p>}</div>
-            <div className="field"><span className="lbl">日期</span><input type="date" value={f.date} onChange={(e) => set({ date: e.target.value })} />{f.date && <span className="hint">星期{WD[parse(f.date).getDay()]}</span>}</div>
-            <div className="field"><span className="lbl">時間</span><div className="timerow"><input type="time" value={f.start} onChange={(e) => set({ start: e.target.value })} /><i>—</i><input type="time" value={f.end} onChange={(e) => set({ end: e.target.value })} /></div>{f.start >= f.end && <p className="hint">結束時間需晚於開始時間</p>}</div>
-            <div className="field"><span className="lbl">重複</span>
-              <div className="row2">
-                <label>頻率<select value={f.repeat} onChange={(e) => set({ repeat: e.target.value })}><option value="none">單次</option><option value="weekly">每週</option><option value="biweekly">每兩週</option></select></label>
-                {f.repeat !== "none" && <label>共幾次<input type="number" min="2" max="52" value={f.count} onChange={(e) => set({ count: e.target.value })} /></label>}
-              </div></div>
-            <div className="field"><span className="lbl">備註</span><input value={f.note} onChange={(e) => set({ note: e.target.value })} placeholder="選填" /></div>
+              <select disabled={!clinic} value={type} onChange={(e) => setType(e.target.value)}>
+                <option value="">{clinic ? "請選擇療育類型" : "請先選擇機構"}</option>
+                {clinic && [...clinic.services, ...clinic.otherServices].map((t) => <option key={t}>{t}</option>)}
+                {clinic && <option value="其他">其他</option>}
+              </select>
+              {type === "其他" && <input value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="自行輸入療育類型" />}
+            </div>
+            <div className="field"><span className="lbl">上課日期與時間</span>
+              {rows.map((r, i) => (
+                <div className="sess" key={i}>
+                  <div className="sess-h"><b>第 {i + 1} 堂</b>{i > 0 && <button className="mini danger" onClick={() => setRows(rows.filter((_, j) => j !== i))}>移除</button>}</div>
+                  <input type="date" value={r.date} onChange={(e) => setRow(i, { date: e.target.value })} />
+                  {r.date && <span className="hint">星期{WD[parse(r.date).getDay()]}</span>}
+                  <div className="timerow">
+                    <input type="time" value={r.start} onChange={(e) => setRow(i, { start: e.target.value })} /><i>—</i>
+                    {i === 0 ? <input type="time" value={r.end} onChange={(e) => setRow(0, { end: e.target.value })} /> : <input className="ro" readOnly value={endOf(r)} aria-label="結束時間（自動）" />}
+                  </div>
+                  {i === 0 && rows.length > 1 && dur > 0 && <span className="hint">之後的課程沿用第 1 堂時長（{dur} 分鐘）</span>}
+                </div>))}
+              {dur <= 0 && <p className="hint">結束時間需晚於開始時間</p>}
+              <button className="addrow" onClick={addRow}>＋ 新增一堂課</button>
+            </div>
+            <div className="field"><span className="lbl">備註</span><input value={note} onChange={(e) => setNote(e.target.value)} placeholder="選填" /></div>
           </div>
-          <div className="sheet-foot"><button className="btn text" onClick={onClose}>取消</button><button className="btn fav-on" disabled={!valid} onClick={save}>新增課程</button></div>
+          <div className="sheet-foot"><button className="btn" onClick={onClose}>取消</button><button className="btn fav-on" disabled={!valid} onClick={save}>新增課程</button></div>
         </>)}
       </div>
     </div>
@@ -469,7 +505,7 @@ function MePage({ settings, setSettings, records, sub, setSub, therapies, setSta
   const upcoming = therapies.filter((t) => t.status === "scheduled").sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
   const back = () => setPg(null);
   const MonthNav = <div className="nav3 center"><button className="mini" aria-label="上個月" onClick={() => shiftM(-1)}>‹</button><b>{month.replace("-", "年")}月</b><button className="mini" aria-label="下個月" onClick={() => shiftM(1)}>›</button></div>;
-  const Stats = <div className="card stats">{SERVICES.map((x) => <div key={x}><span>{x}</span><b>{mr.filter((r) => r.type === x).length} 次</b></div>)}<div className="total"><span>本月療育</span><b>{mr.length} 次</b></div></div>;
+  const Stats = <div className="card stats">{SERVICES.map((x) => <div key={x}><span>{x}</span><b>{mr.filter((r) => (x === "其他治療" ? !MAIN_SERVICES.includes(r.type) : r.type === x)).length} 次</b></div>)}<div className="total"><span>本月療育</span><b>{mr.length} 次</b></div></div>;
 
   if (pg === "courses") return <SubPage title="我的早療課程" onBack={back}>{upcoming.length ? upcoming.map((t) => <div key={t.id} className="stack"><div className="addr">{t.date.replace(/-/g, "/")}</div><CourseItem t={t} onStatus={setStatus} onDelete={del} /></div>) : <div className="empty"><p>目前沒有待上的課程</p><p className="hint">到日曆點「＋」新增課程。</p></div>}</SubPage>;
   if (pg === "records") return <SubPage title="療育紀錄" onBack={back}>{MonthNav}
