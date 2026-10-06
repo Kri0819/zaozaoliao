@@ -11,6 +11,8 @@ const SERVICES = ["物理治療","職能治療","語言治療","心理治療","�
 // 資料結構保留「尚未確認」；前台篩選先只提供前三項
 const MAIN_SERVICES = SERVICES.slice(0, 4); // 主要治療
 const OTHER_SERVICES = ["音樂治療","到宅療育","ABA","其他療育"]; // 「其他治療」包含的項目
+const TYPE_COLOR = { "物理治療": "#4DB6E8", "職能治療": "#5CCB9B", "語言治療": "#FFB92E", "心理治療": "#A78BFA", other: "#FF8FA8" };
+const colorOf = (t) => TYPE_COLOR[t] || TYPE_COLOR.other;
 const PAYMENTS = ["健保給付","合格自費","純自費","尚未確認"]; // 依第二階段需求，篩選器也包含「尚未確認」
 const PAY_STYLE = { "健保給付":"pay-nhi", "合格自費":"pay-q", "純自費":"pay-self", "尚未確認":"pay-unk" };
 const T = { source:"mock", sourceType:"mock", lastVerifiedAt:null };
@@ -67,7 +69,7 @@ function ClinicCard({ x, active, fav, onSelect, onFav }) {
         </button>
       </div>
       <div className="addr">{x.address}</div>
-      <div className="svc">{x.services.map((s) => s.replace("治療", "")).join("｜")}{x.otherServices.length ? `｜${x.otherServices.join("、")}` : ""}</div>
+      <div className="svc">{[...x.services, ...x.otherServices].map((t) => <span key={t} className="sv"><i style={{ background: colorOf(t) }} />{t.replace("治療", "")}</span>)}</div>
       <div className="tags">{x.paymentTypes.map((p) => <PayTag key={p} p={p} />)}</div>
     </div>
   );
@@ -87,10 +89,10 @@ function MapView({ items, selectedId, onSelect, onOpen }) {
   return (
     <div className="map" onClick={() => onSelect(null)}>
       <svg className="map-bg" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true">
-        <rect width="400" height="300" fill="#EDEFE9" />
-        <path d="M0 230 C80 200 120 260 220 240 S360 190 400 210 L400 300 L0 300Z" fill="#D6E4E8" />
-        <rect x="270" y="30" width="80" height="55" rx="14" fill="#DCE8D2" />
-        <rect x="30" y="60" width="60" height="40" rx="12" fill="#DCE8D2" />
+        <rect width="400" height="300" fill="#FFF6E8" />
+        <path d="M0 230 C80 200 120 260 220 240 S360 190 400 210 L400 300 L0 300Z" fill="#CDE9F6" />
+        <rect x="270" y="30" width="80" height="55" rx="14" fill="#D3EDC6" />
+        <rect x="30" y="60" width="60" height="40" rx="12" fill="#D3EDC6" />
         <g stroke="#fff" strokeWidth="9" fill="none" strokeLinecap="round">
           <path d="M-10 120 C100 110 200 150 410 100" /><path d="M150 -10 C170 100 130 200 160 310" /><path d="M300 -10 C280 90 330 190 290 310" />
         </g>
@@ -191,7 +193,7 @@ function MapPage({ favs, toggleFav }) {
     <>
           <main className="screen">
         <div className="appbar">
-          <div className="ttl"><h1>{APP_NAME}</h1><span>找附近的兒童復健與療育服務</span></div>
+          <div className="ttl"><h1>{APP_NAME}</h1><span>找附近的兒童復健與療育服務 🧸</span></div>
           <button className="iconbtn" aria-label="我的最愛" onClick={() => setShowFavs(true)}><Heart size={22} />{favs.length > 0 && <em className="badge">{favs.length}</em>}</button>
         </div>
         <div className="searchrow">
@@ -202,7 +204,7 @@ function MapPage({ favs, toggleFav }) {
         <div className="count">{loading ? "搜尋中…" : `找到 ${results.length} 間符合條件的院所`}</div>
         <div className="results">{loading ? [1, 2, 3].map((i) => <div key={i} className="card skeleton" />)
           : results.length ? list(results)
-          : (<div className="empty"><p>沒有符合條件的院所</p><p className="hint">試試放寬治療類型，或改選其他行政區。</p><button className="btn" onClick={reset}>清除篩選</button></div>)}</div>
+          : (<div className="empty"><span className="emo">🌱</span><p>沒有符合條件的院所</p><p className="hint">試試放寬治療類型，或改選其他行政區。</p><button className="btn" onClick={reset}>清除篩選</button></div>)}</div>
       </main>
       {showFilters && (
         <div className="overlay" onClick={() => setShowFilters(false)}>
@@ -226,7 +228,7 @@ function MapPage({ favs, toggleFav }) {
           <div className="screen">
             <div className="appbar"><button className="iconbtn" aria-label="返回地圖" onClick={() => setShowFavs(false)}><ChevronLeft size={22} /></button><h1>我的最愛</h1></div>
             {favList.length ? favList.map((x) => <ClinicCard key={x.id} x={x} fav onSelect={(id) => { setShowFavs(false); openClinic(id); }} onFav={toggleFav} />)
-              : <div className="empty"><p>還沒有收藏的早療機構</p><p className="hint">找到適合的機構後，可以點擊 ♡ 收藏</p><button className="btn" onClick={() => setShowFavs(false)}>回到地圖</button></div>}
+              : <div className="empty"><span className="emo">🌱</span><p>還沒有收藏的早療機構</p><p className="hint">找到適合的機構後，可以點擊 ♡ 收藏</p><button className="btn" onClick={() => setShowFavs(false)}>回到地圖</button></div>}
           </div>
         </div>
       )}
@@ -237,20 +239,21 @@ function MapPage({ favs, toggleFav }) {
 
 /* ============ 樣式 ============ */
 const CSS = `
-.app{--bg:#FFFFFF;--surface:#F5F2ED;--ink:#2B2A28;--mute:#8A857E;--line:#EEEAE4;--pri:#4F7F7A;--pri-soft:#EAF1EF;--heart:#E07A6F;
-font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;max-width:480px;margin:0 auto;font-size:16px;line-height:1.5;padding-bottom:calc(72px + env(safe-area-inset-bottom));overflow-x:hidden;overflow-x:clip;position:relative}
+@import url("https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@300..800&display=swap");
+.app{--bg:#FFFAF3;--surface:#FFF0E1;--ink:#3A2F2A;--mute:#9A8576;--line:#F5E8DA;--pri:#E85D3A;--pri-soft:#FFE7DD;--heart:#FF5C7A;
+font-family:"Chiron GoRound TC","jf-openhuninn-2.1","Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;max-width:480px;margin:0 auto;font-size:16px;line-height:1.5;padding-bottom:calc(72px + env(safe-area-inset-bottom));overflow-x:hidden;overflow-x:clip;position:relative}
 .app *{box-sizing:border-box;min-width:0}.app button,.app select,.app input{font:inherit;color:inherit}.app button{-webkit-tap-highlight-color:transparent}
 .notice{font-size:11px;color:var(--mute);padding:6px 20px 0;text-align:center}
 .screen{padding:0 20px 24px;display:grid;gap:20px;align-content:start}
-.appbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;min-height:64px;padding-top:env(safe-area-inset-top);background:rgba(255,255,255,.94);backdrop-filter:blur(8px)}
+.appbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;box-sizing:content-box;min-height:60px;padding-top:env(safe-area-inset-top);background:rgba(255,250,243,.94);backdrop-filter:blur(8px)}
 .appbar h1,.ttl h1{flex:1;margin:0;font-size:28px;font-weight:700;letter-spacing:.5px;line-height:1.2}.ttl{flex:1}.ttl span{font-size:13px;color:var(--mute)}
 .iconbtn{position:relative;width:44px;height:44px;border-radius:50%;border:0;background:none;display:grid;place-items:center;cursor:pointer;flex:none;color:var(--ink)}
 .iconbtn.filled{background:var(--surface)}.iconbtn:active{background:var(--surface)}
 .badge{position:absolute;top:4px;right:2px;min-width:16px;height:16px;border-radius:8px;background:var(--heart);color:#fff;font-size:10px;font-style:normal;display:grid;place-items:center;padding:0 4px}
-.searchrow{display:flex;gap:8px}.searchbox{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:12px;padding:0 14px;height:46px;color:var(--mute)}
+.searchrow{display:flex;gap:8px}.searchbox{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:18px;padding:0 14px;height:48px;color:var(--mute)}
 .searchbox input{flex:1;border:0;outline:0;background:none;font-size:16px;height:auto;padding:0;color:var(--ink)}
 .icon{border:0;background:none;cursor:pointer;display:flex;padding:8px;color:var(--mute)}
-.mapwrap{height:300px;margin:0 -20px}.map{position:relative;width:100%;height:100%;overflow:hidden;background:#EDEFE9}
+.mapwrap{height:300px;margin:0 -20px}.map{position:relative;width:100%;height:100%;overflow:hidden;background:#FFF6E8}
 .map-bg{position:absolute;inset:0;width:100%;height:100%}.map-note{position:absolute;left:12px;bottom:8px;font-size:10px;color:#6f6c66;background:rgba(255,255,255,.8);padding:1px 8px;border-radius:999px}
 .map-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--mute);font-size:14px}
 .pin{position:absolute;transform:translate(-50%,-100%);border:0;background:none;padding:0;color:var(--pri);cursor:pointer;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}.pin.sel{color:var(--heart);z-index:5}
@@ -258,63 +261,63 @@ font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-ser
 .count{font-size:13px;color:var(--mute);margin-bottom:-12px}
 .results{display:grid}
 .card{background:none;border:0;border-radius:0;padding:0;display:grid;gap:6px}
-.results .card{padding:16px 20px;margin:0 -20px;border-bottom:1px solid var(--line);cursor:pointer}.results .card.active{background:#F8F6F2}
-.card-top{display:flex;justify-content:space-between;gap:8px}.card-name{font-weight:600;font-size:16px}.card-sub{display:flex;align-items:center;gap:3px;color:var(--mute);font-size:13px}.svc{font-size:14px;color:#5b5750}.addr{font-size:13px;color:var(--mute)}
-.heart{border:0;background:none;cursor:pointer;color:#C9C4BC;width:44px;height:44px;margin:-10px -10px 0 0;display:grid;place-items:center;flex:none}.heart.on{color:var(--heart)}
+.results .card{padding:16px 20px;margin:0 -20px;border-bottom:1px solid var(--line);cursor:pointer}.results .card.active{background:#FFF4E8}
+.card-top{display:flex;justify-content:space-between;gap:8px}.card-name{font-weight:600;font-size:16px}.card-sub{display:flex;align-items:center;gap:3px;color:var(--mute);font-size:13px}.svc{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:14px;color:#6B5A4E}.sv{display:inline-flex;align-items:center;gap:5px}.sv i,.tdot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}.tdot{width:10px;height:10px}.emo{font-size:44px;line-height:1}.addr{font-size:13px;color:var(--mute)}
+.heart{border:0;background:none;cursor:pointer;color:#D9C7B6;width:44px;height:44px;margin:-10px -10px 0 0;display:grid;place-items:center;flex:none}.heart.on{color:var(--heart)}
 .tags,.chips{display:flex;flex-wrap:wrap;gap:8px}.tag{font-size:11px;padding:1px 8px;border-radius:6px;font-weight:500;line-height:1.7}
-.pay-nhi{background:#E4F1E8;color:#2F6B47}.pay-q{background:#FBEFD5;color:#8A5E10}.pay-self{background:#ECEAF6;color:#524A93}.pay-unk{background:#EEECE8;color:#6b675f}
-.tag.mock{background:#EEECE8;color:#7a766f}.tag.have{background:var(--pri-soft);color:var(--pri)}.tag.none{background:none;color:#B5B0A8}
+.pay-nhi{background:#E4F1E8;color:#2F6B47}.pay-q{background:#FBEFD5;color:#8A5E10}.pay-self{background:#ECEAF6;color:#524A93}.pay-unk{background:#F7EBDD;color:#6b675f}
+.tag.mock{background:#F7EBDD;color:#7a766f}.tag.have{background:var(--pri-soft);color:var(--pri)}.tag.none{background:none;color:#B5B0A8}
 .chip{border:1.5px solid transparent;background:var(--surface);border-radius:10px;min-height:42px;padding:0 16px;cursor:pointer;font-size:15px}.chip.on{background:var(--pri-soft);border-color:var(--pri);color:var(--pri);font-weight:600}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;background:var(--surface);color:var(--ink);border-radius:12px;min-height:48px;padding:0 20px;cursor:pointer;text-decoration:none;font-weight:500}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;background:var(--surface);color:var(--ink);border-radius:18px;min-height:48px;padding:0 20px;cursor:pointer;text-decoration:none;font-weight:500}
 .btn.small{min-height:36px;padding:0 14px}.btn.fav-on{background:var(--pri);color:#fff;font-weight:600}.btn.text{background:none;color:var(--mute)}.btn:disabled{opacity:.4;cursor:not-allowed}
 .mini{border:0;background:none;color:var(--pri);border-radius:8px;min-height:40px;padding:0 10px;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
 .mini.on{background:var(--pri-soft)}.mini.danger{color:var(--heart)}.mini.arrow{font-size:24px;min-width:40px;justify-content:center;color:var(--ink)}
-.skeleton{height:96px;background:linear-gradient(90deg,#F5F2ED,#FAF8F5,#F5F2ED);background-size:200% 100%;animation:sk 1.2s infinite;margin:8px 0;border-radius:12px}@keyframes sk{to{background-position:-200% 0}}
+.skeleton{height:96px;background:linear-gradient(90deg,#FFF0E1,#FFF8EF,#FFF0E1);background-size:200% 100%;animation:sk 1.2s infinite;margin:8px 0;border-radius:12px}@keyframes sk{to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.skeleton{animation:none}}
 .empty{text-align:center;padding:40px 16px;display:grid;gap:8px;justify-items:center}.empty p{margin:0;font-weight:600}.empty .hint{font-weight:400}.empty .btn{margin-top:8px}
-.hint{color:var(--mute);margin:0;font-size:13px}.banner{background:#FBF4E6;color:#7A5A12;border-radius:12px;padding:10px 14px;font-size:13px}
+.hint{color:var(--mute);margin:0;font-size:13px}.banner{background:#FFF1D6;color:#7A5A12;border-radius:12px;padding:10px 14px;font-size:13px}
 .full{position:fixed;top:0;bottom:calc(57px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg);overflow:auto;z-index:25}
 .overlay{position:fixed;inset:0;background:rgba(30,28,25,.35);z-index:50;display:flex;align-items:flex-end;justify-content:center}.overlay.center{align-items:center;padding:20px}
 .sheet,.modal{background:#fff;width:100%;max-width:480px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -4px 30px rgba(0,0,0,.1)}
-.sheet{border-radius:20px 20px 0 0;max-height:90vh;padding-bottom:env(safe-area-inset-bottom)}.sheet::before{content:"";width:36px;height:4px;border-radius:2px;background:#DDD8D0;margin:8px auto 0;flex:none}
-.modal{border-radius:20px;max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px)}
+.sheet{border-radius:28px 28px 0 0;max-height:90vh;padding-bottom:env(safe-area-inset-bottom)}.sheet::before{content:"";width:36px;height:4px;border-radius:2px;background:#EBD7C3;margin:8px auto 0;flex:none}
+.modal{border-radius:28px;max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px)}
 .sheet-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 12px 4px 20px;flex:none}.sheet-head h2{margin:0;font-size:20px;font-weight:700}
 .sheet-body{overflow:auto;padding:8px 20px 20px;display:grid;gap:20px;align-content:start;-webkit-overflow-scrolling:touch}
-.sheet-foot{display:flex;gap:12px;padding:12px 20px;flex:none}.sheet-foot .btn{flex:1;border:1.5px solid #DAD6CE;background:#fff}.sheet-foot .btn.fav-on{background:var(--pri);border-color:var(--pri);color:#fff}.sheet-foot .btn.text{flex:0 0 auto;border:0;background:none}
+.sheet-foot{display:flex;gap:12px;padding:12px 20px;flex:none}.sheet-foot .btn{flex:1;border:1.5px solid #EBD7C3;background:#fff}.sheet-foot .btn.fav-on{background:var(--pri);border-color:var(--pri);color:#fff}.sheet-foot .btn.text{flex:0 0 auto;border:0;background:none}
 .modal .sheet-head{padding:22px 16px 4px 24px}.modal .sheet-body{padding:8px 24px 16px;gap:20px}.modal .sheet-foot{padding:8px 24px 22px}
-.sess{display:grid;gap:8px;padding:14px;border:1px solid var(--line);border-radius:16px}.sess-h{display:flex;justify-content:space-between;align-items:center;min-height:32px}
-.line{display:grid;grid-template-columns:1.5fr 1fr 40px;gap:8px;align-items:center}.line input{padding-left:10px;padding-right:10px}
-.sess2{display:grid;gap:4px;padding:0 2px}.xbtn{border:0;background:none;color:var(--mute);width:40px;height:44px;display:grid;place-items:center;cursor:pointer}
+.sess{display:grid;gap:8px}.sess-h b{font-size:14px;color:var(--mute);font-weight:500}.sess-h{display:flex;justify-content:space-between;align-items:center;min-height:32px}
+.line{display:grid;grid-template-columns:1.7fr 1fr 36px;gap:8px;align-items:center}.line input{font-size:15px;padding-left:6px;padding-right:6px;text-align:center;white-space:nowrap}
+.sess2{display:grid;gap:4px;padding:0 2px}.xbtn{border:0;background:none;color:var(--mute);width:36px;height:44px;display:grid;place-items:center;cursor:pointer}
 .screen.cal{gap:12px}.calbar{gap:12px}.monthrow{display:flex;justify-content:space-between;align-items:center}
 .todaybtn{border:0;background:var(--surface);border-radius:999px;min-height:36px;padding:0 16px;font-size:14px;color:var(--ink);cursor:pointer}
 .seg.full{display:grid;grid-template-columns:repeat(3,1fr);width:100%;height:42px;align-self:start}.seg.full button{min-height:0;height:100%;padding:0}
 .addrow{border:1.5px dashed #CFCAC2;background:none;border-radius:16px;min-height:52px;color:var(--pri);font-weight:600;font-size:16px;cursor:pointer}
-.donerow{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:6px 0}.ro{background:#F7F5F1!important;color:var(--mute)!important}
+.donerow{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:6px 0}.ro{background:#FFF4E8!important;color:var(--mute)!important}
 .field{display:grid;gap:8px}.lbl{font-size:13px;color:var(--mute);font-weight:500}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.row2 label{display:grid;gap:6px;font-size:13px;color:var(--mute)}
 .timerow{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}.timerow i{color:var(--mute);font-style:normal}
-.sheet input,.sheet select,.modal input,.modal select,.inp{height:52px;border:1.5px solid #DAD6CE;border-radius:16px;padding:0 16px;background:#fff;width:100%;font-size:16px;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.sheet input,.sheet select,.modal input,.modal select,.inp{height:52px;border:1.5px solid #EBD7C3;border-radius:16px;padding:0 16px;background:#fff;width:100%;font-size:16px;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.05)}
 input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;display:block;height:52px;min-height:52px;padding-top:13px;padding-bottom:0;text-align:left;line-height:1.3}
-.sheet input:focus,.sheet select:focus,.modal input:focus,.modal select:focus{outline:0;border-color:var(--pri)}.modal select:disabled{color:var(--mute);background:#F7F5F1}
+.sheet input:focus,.sheet select:focus,.modal input:focus,.modal select:focus{outline:0;border-color:var(--pri)}.modal select:disabled{color:var(--mute);background:#FFF4E8}
 .sheet .searchbox input{height:auto;min-height:0;padding:0;border:0;box-shadow:none;background:none}
 .pick{display:grid;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:12px 0;min-height:56px;cursor:pointer;gap:2px;font-size:16px}.pick span{font-size:13px;color:var(--mute)}
 .picked{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--surface);border-radius:12px;padding:10px 14px}
 dl{margin:0;display:grid;gap:2px}dt{font-size:12px;color:var(--mute);margin-top:14px}dd{margin:0}.note{font-size:13px;color:var(--mute)}.actions{display:grid;gap:8px}
-.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
-.bottom button{position:relative;border:0;background:none;min-height:56px;display:grid;justify-items:center;align-content:center;gap:2px;font-size:11px;color:#A8A39B;cursor:pointer}.bottom button.on{color:var(--pri);font-weight:600}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);background:rgba(255,250,243,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.bottom button{position:relative;border:0;background:none;min-height:56px;display:grid;justify-items:center;align-content:center;gap:2px;font-size:11px;color:#BBA999;cursor:pointer}.bottom button.on{color:var(--pri);font-weight:600}
 .dot{position:absolute;top:8px;left:56%;width:8px;height:8px;border-radius:50%;background:var(--heart)}
 .nav3{display:flex;align-items:center;gap:4px}.nav3.center{justify-content:center}.nav3 b{min-width:128px;text-align:center;font-size:19px;font-weight:600}
-.calbar{display:grid;gap:12px;align-content:start}.seg{display:flex;background:var(--surface);border-radius:10px;padding:3px;width:fit-content}
+.calbar{display:block}.calbar>*+*{margin-top:12px}.seg{display:flex;background:var(--surface);border-radius:10px;padding:3px;width:fit-content}
 .seg button{border:0;background:none;min-height:34px;padding:0 20px;border-radius:8px;cursor:pointer;color:var(--mute);font-size:14px}.seg button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.1)}
 .calcard{background:none;padding:0}.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:0}.mgrid.head{text-align:center;color:var(--mute);font-size:12px;padding-bottom:6px}
 .cell{height:52px;border:0;background:none;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;font-size:16px}
-.cell span{width:30px;height:30px;display:grid;place-items:center;border-radius:50%}.cell.dim{opacity:.3}.cell.sel{background:#F4F1EC}.cell.today span{background:var(--pri);color:#fff;font-weight:600}
+.cell span{width:30px;height:30px;display:grid;place-items:center;border-radius:50%}.cell.dim{opacity:.3}.cell.sel{background:#FFE9DB}.cell.today span{background:var(--pri);color:#fff;font-weight:600}
 .dots{display:flex;gap:3px;height:5px}.dots b{width:5px;height:5px;border-radius:50%;background:var(--pri)}.dots b.done{background:#7DB591}.dots b.missed,.dots b.cancelled{background:#CFCAC2}
 .daysec{display:grid;gap:0}.daysec h3,.gtitle{margin:0;font-size:13px;color:var(--mute);font-weight:500}.daysec h3{padding-bottom:6px}.gtitle{margin:12px 0 -12px}
 .course{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line)}.course.cancelled,.course.missed{opacity:.6}
 .ctime{font-weight:600;font-size:16px;min-width:48px;line-height:1.3}.ctime small{display:block;font-size:12px;font-weight:400;color:var(--mute)}
 .cbody{display:grid;gap:6px;flex:1}.crow{display:grid;gap:1px;cursor:pointer}.ctitle{font-weight:600;display:flex;gap:8px;align-items:center}.cact{display:flex;flex-wrap:wrap;gap:2px}.stack{display:grid;gap:4px}
-.fab{position:fixed;right:max(20px,calc(50% - 220px));bottom:calc(76px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;border:0;background:var(--pri);color:#fff;display:grid;place-items:center;box-shadow:0 6px 16px rgba(79,127,122,.4);cursor:pointer;z-index:25}
+.fab{position:fixed;right:max(20px,calc(50% - 220px));bottom:calc(76px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;border:0;background:var(--pri);color:#fff;display:grid;place-items:center;box-shadow:0 6px 16px rgba(232,93,58,.35);cursor:pointer;z-index:25}
 .list{display:grid}.row{display:flex;align-items:center;gap:14px;width:100%;min-height:60px;padding:10px 0;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;cursor:pointer}
 .ico{color:var(--pri);display:grid;place-items:center;flex:none;width:24px}.tx{flex:1;font-size:16px}.tx small{display:block;color:var(--mute);font-size:13px}
 .profile{display:flex;align-items:center;gap:14px;padding:4px 0 8px}.avatar{width:56px;height:56px;border-radius:50%;background:var(--pri-soft);color:var(--pri);display:grid;place-items:center;flex:none}
@@ -322,7 +325,7 @@ dl{margin:0;display:grid;gap:2px}dt{font-size:12px;color:var(--mute);margin-top:
 `;
 
 /* ============ 第二階段：個人化早療管理（日曆／我的） ============ */
-export const APP_NAME = "早早療", APP_VERSION = "0.5.2", VERSION_NAME = "日曆切換列修正";
+export const APP_NAME = "早早療", APP_VERSION = "0.6.0", VERSION_NAME = "活潑配色與圓體字";
 const pad = (n) => String(n).padStart(2, "0");
 const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const parse = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
@@ -363,7 +366,7 @@ function CourseItem({ t, onStatus, onDelete }) {
       <div className="ctime">{t.start}<small>{t.end}</small></div>
       <div className="cbody">
         <div className="crow" role="button" tabIndex={0} onClick={() => setOpen(!open)} onKeyDown={(e) => e.key === "Enter" && setOpen(!open)}>
-          <div className="ctitle">{t.type}{t.status !== "scheduled" && <span className={`tag ${t.status === "done" ? "pay-nhi" : "mock"}`}>{STATUS[t.status]}</span>}</div>
+          <div className="ctitle"><i className="tdot" style={{ background: colorOf(t.type) }} />{t.type}{t.status !== "scheduled" && <span className={`tag ${t.status === "done" ? "pay-nhi" : "mock"}`}>{STATUS[t.status]}</span>}</div>
           <div>{x.name}</div><div className="addr">{x.address}</div>
           {t.note && <div className="addr">備註：{t.note}</div>}
         </div>
@@ -389,22 +392,22 @@ function CalendarPage({ therapies, setStatus, del, onAdd, weekStart, selDate, se
   const title = view === "month" ? `${c.getFullYear()} 年 ${c.getMonth() + 1} 月` : view === "week" ? `${weekDays[0].slice(5)} – ${weekDays[6].slice(5)}` : `${c.getMonth() + 1}/${c.getDate()}（${WD[c.getDay()]}）`;
   const Day = ({ date }) => { const d = parse(date), items = byDate[date] || []; return (
     <section className="daysec"><h3>{d.getMonth() + 1}/{d.getDate()}（{WD[d.getDay()]}）</h3>
-      {items.length ? items.map((t) => <CourseItem key={t.id} t={t} onStatus={setStatus} onDelete={del} />) : <p className="hint">沒有課程</p>}</section>); };
+      {items.length ? items.map((t) => <CourseItem key={t.id} t={t} onStatus={setStatus} onDelete={del} />) : <p className="hint">這天沒有課程 ☁️</p>}</section>); };
   return (
     <main className="screen cal"><div className="appbar"><h1>我的療育行程</h1></div>
       <div className="calbar">
+        <div className="seg full">{[["month", "月"], ["week", "週"], ["day", "日"]].map(([k, l]) => <button key={k} className={view === k ? "on" : ""} onClick={() => setView(k)}>{l}</button>)}</div>
         <div className="monthrow">
           <div className="nav3"><button className="mini arrow" aria-label="上一頁" onClick={() => shift(-1)}>‹</button><b>{title}</b><button className="mini arrow" aria-label="下一頁" onClick={() => shift(1)}>›</button></div>
           <button className="todaybtn" onClick={() => setSelDate(today)}>今天</button>
         </div>
-        <div className="seg full">{[["month", "月"], ["week", "週"], ["day", "日"]].map(([k, l]) => <button key={k} className={view === k ? "on" : ""} onClick={() => setView(k)}>{l}</button>)}</div>
       </div>
       {view === "month" && (<>
         <div className="calcard"><div className="mgrid head">{[0, 1, 2, 3, 4, 5, 6].map((i) => <div key={i}>{WD[(i + weekStart) % 7]}</div>)}</div>
         <div className="mgrid">{cells.map((ds) => { const items = byDate[ds] || []; return (
           <button key={ds} className={`cell ${ds.slice(0, 7) !== cur.slice(0, 7) ? "dim" : ""} ${ds === today ? "today" : ""} ${ds === cur ? "sel" : ""}`} onClick={() => setSelDate(ds)}>
             <span>{parse(ds).getDate()}</span>
-            <div className="dots">{items.slice(0, 3).map((t) => <b key={t.id} className={t.status} />)}</div>
+            <div className="dots">{items.slice(0, 3).map((t) => <b key={t.id} style={{ background: t.status === "missed" || t.status === "cancelled" ? "#D9CFC4" : colorOf(t.type) }} />)}</div>
           </button>); })}</div>
         </div>
         <Day date={cur} />
@@ -522,10 +525,10 @@ function MePage({ settings, setSettings, records, sub, setSub, therapies, setSta
   const MonthNav = <div className="nav3 center"><button className="mini arrow" aria-label="上個月" onClick={() => shiftM(-1)}>‹</button><b>{month.replace("-", "年")}月</b><button className="mini arrow" aria-label="下個月" onClick={() => shiftM(1)}>›</button></div>;
   const Stats = <div className="card stats">{SERVICES.map((x) => <div key={x}><span>{x}</span><b>{mr.filter((r) => (x === "其他治療" ? !MAIN_SERVICES.includes(r.type) : r.type === x)).length} 次</b></div>)}<div className="total"><span>本月療育</span><b>{mr.length} 次</b></div></div>;
 
-  if (pg === "courses") return <SubPage title="我的早療課程" onBack={back}>{upcoming.length ? upcoming.map((t) => <div key={t.id} className="stack"><div className="addr">{t.date.replace(/-/g, "/")}</div><CourseItem t={t} onStatus={setStatus} onDelete={del} /></div>) : <div className="empty"><p>目前沒有待上的課程</p><p className="hint">到日曆點「＋」新增課程。</p></div>}</SubPage>;
+  if (pg === "courses") return <SubPage title="我的早療課程" onBack={back}>{upcoming.length ? upcoming.map((t) => <div key={t.id} className="stack"><div className="addr">{t.date.replace(/-/g, "/")}</div><CourseItem t={t} onStatus={setStatus} onDelete={del} /></div>) : <div className="empty"><span className="emo">🌱</span><p>目前沒有待上的課程</p><p className="hint">到日曆點「＋」新增課程。</p></div>}</SubPage>;
   if (pg === "records") return <SubPage title="療育紀錄" onBack={back}>{MonthNav}
     {hist.length ? hist.map((t) => <div key={t.id} className="course"><div className="ctime">{t.date.slice(5).replace("-", "/")}<br />{t.start}</div><div className="cbody"><b>{t.type}</b><div>{clinicOf(t.clinicId)?.name}</div></div><span className={`tag ${t.status === "done" ? "pay-nhi" : "mock"}`}>{STATUS[t.status]}</span></div>)
-      : <div className="empty"><p>這個月還沒有療育紀錄</p><p className="hint">在日曆標記課程後會出現在這裡。</p></div>}</SubPage>;
+      : <div className="empty"><span className="emo">🌱</span><p>這個月還沒有療育紀錄</p><p className="hint">在日曆標記課程後會出現在這裡。</p></div>}</SubPage>;
   if (pg === "stats") return <SubPage title="療育次數統計" onBack={back}>{MonthNav}{Stats}<p className="hint">只統計已完成的療育次數。</p></SubPage>;
   if (pg === "reminder") return <SubPage title="早療補助申請提醒" onBack={back}>
     <div className="card"><b>{info.label}</b>
@@ -545,7 +548,7 @@ function MePage({ settings, setSettings, records, sub, setSub, therapies, setSta
   return (
     <main className="screen">
       <div className="appbar"><h1>我的</h1></div>
-      <div className="profile"><span className="avatar"><User size={26} /></span><div><b>{settings.name || "早早療使用者"}</b><div className="addr">{APP_NAME} v{APP_VERSION}｜{VERSION_NAME}</div></div></div>
+      <div className="profile"><span className="avatar">🧸</span><div><b>{settings.name || "早早療家長"}</b><div className="addr">{APP_NAME} v{APP_VERSION}｜{VERSION_NAME}</div></div></div>
       <div className="gtitle">療育</div>
       <div className="list"><Row icon={CalendarDays} title="我的早療課程" sub={`${upcoming.length} 堂待上`} onClick={() => setPg("courses")} />
         <Row icon={ClipboardList} title="療育紀錄" sub={`${month.replace("-", "年")}月`} onClick={() => setPg("records")} />
