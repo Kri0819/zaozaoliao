@@ -68,7 +68,7 @@ function ClinicCard({ x, active, fav, onSelect, onFav }) {
       </div>
       <div className="addr">{x.address}</div>
       <div className="svc">{x.services.map((s) => s.replace("治療", "")).join("｜")}{x.otherServices.length ? `｜${x.otherServices.join("、")}` : ""}</div>
-      <div className="tags">{x.paymentTypes.map((p) => <PayTag key={p} p={p} />)}<span className="tag mock">測試資料</span></div>
+      <div className="tags">{x.paymentTypes.map((p) => <PayTag key={p} p={p} />)}</div>
     </div>
   );
 }
@@ -87,10 +87,10 @@ function MapView({ items, selectedId, onSelect, onOpen }) {
   return (
     <div className="map" onClick={() => onSelect(null)}>
       <svg className="map-bg" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true">
-        <rect width="400" height="300" fill="#EAF0EA" />
-        <path d="M0 230 C80 200 120 260 220 240 S360 190 400 210 L400 300 L0 300Z" fill="#D5E6EC" />
-        <rect x="270" y="30" width="80" height="55" rx="14" fill="#DDEBD3" />
-        <rect x="30" y="60" width="60" height="40" rx="12" fill="#DDEBD3" />
+        <rect width="400" height="300" fill="#EDEFE9" />
+        <path d="M0 230 C80 200 120 260 220 240 S360 190 400 210 L400 300 L0 300Z" fill="#D6E4E8" />
+        <rect x="270" y="30" width="80" height="55" rx="14" fill="#DCE8D2" />
+        <rect x="30" y="60" width="60" height="40" rx="12" fill="#DCE8D2" />
         <g stroke="#fff" strokeWidth="9" fill="none" strokeLinecap="round">
           <path d="M-10 120 C100 110 200 150 410 100" /><path d="M150 -10 C170 100 130 200 160 310" /><path d="M300 -10 C280 90 330 190 290 310" />
         </g>
@@ -200,9 +200,9 @@ function MapPage({ favs, toggleFav }) {
         </div>
         <div className="mapwrap"><MapView items={results} selectedId={selectedId} onSelect={setSelectedId} onOpen={setDetailId} /></div>
         <div className="count">{loading ? "搜尋中…" : `找到 ${results.length} 間符合條件的院所`}</div>
-        {loading ? [1, 2, 3].map((i) => <div key={i} className="card skeleton" />)
+        <div className="results">{loading ? [1, 2, 3].map((i) => <div key={i} className="card skeleton" />)
           : results.length ? list(results)
-          : (<div className="empty"><p>沒有符合條件的院所</p><p className="hint">試試放寬治療類型，或改選其他行政區。</p><button className="btn" onClick={reset}>清除篩選</button></div>)}
+          : (<div className="empty"><p>沒有符合條件的院所</p><p className="hint">試試放寬治療類型，或改選其他行政區。</p><button className="btn" onClick={reset}>清除篩選</button></div>)}</div>
       </main>
       {showFilters && (
         <div className="overlay" onClick={() => setShowFilters(false)}>
@@ -216,7 +216,7 @@ function MapPage({ favs, toggleFav }) {
               <div className="field"><span className="lbl">治療類型（需同時提供）</span><div className="chips">{SERVICES.map((x) => <Chip key={x} on={services.includes(x)} onClick={() => toggle(services, setServices, x)}>{x}</Chip>)}</div></div>
               <div className="field"><span className="lbl">費用／給付方式（符合任一）</span><div className="chips">{PAYMENTS.map((p) => <Chip key={p} on={payments.includes(p)} onClick={() => toggle(payments, setPayments, p)}>{p}</Chip>)}</div></div>
             </div>
-            <div className="sheet-foot"><button className="btn" onClick={reset}>清除</button><button className="btn fav-on" onClick={() => setShowFilters(false)}>顯示 {results.length} 間</button></div>
+            <div className="sheet-foot"><button className="btn text" onClick={reset}>清除</button><button className="btn fav-on" onClick={() => setShowFilters(false)}>顯示 {results.length} 間</button></div>
           </aside>
         </div>
       )}
@@ -237,78 +237,80 @@ function MapPage({ favs, toggleFav }) {
 
 /* ============ 樣式 ============ */
 const CSS = `
-.app{--bg:#F6F8F6;--ink:#1F2D29;--mute:#6B7A74;--line:#E3EAE5;--pri:#2F6F6A;--pri-soft:#E3F0ED;--heart:#E0566B;
-font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;max-width:480px;margin:0 auto;font-size:15px;line-height:1.5;padding-bottom:calc(76px + env(safe-area-inset-bottom));overflow-x:hidden;position:relative}
+.app{--bg:#FFFFFF;--surface:#F5F2ED;--ink:#2B2A28;--mute:#8A857E;--line:#EEEAE4;--pri:#4F7F7A;--pri-soft:#EAF1EF;--heart:#E07A6F;
+font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;max-width:480px;margin:0 auto;font-size:16px;line-height:1.5;padding-bottom:calc(72px + env(safe-area-inset-bottom));overflow-x:hidden;position:relative}
 .app *{box-sizing:border-box;min-width:0}.app button,.app select,.app input{font:inherit;color:inherit}.app button{-webkit-tap-highlight-color:transparent}
-.notice{background:#FFF4DC;color:#7A5A12;font-size:12px;padding:6px 16px;text-align:center}
-.screen{padding:0 16px 16px;display:grid;gap:12px;align-content:start}
-.appbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;min-height:60px;padding-top:env(safe-area-inset-top);background:var(--bg)}
-.appbar h1{flex:1;margin:0;font-size:22px;font-weight:700}.ttl{flex:1}.ttl h1{margin:0;font-size:22px}.ttl span{font-size:13px;color:var(--mute)}
-.iconbtn{position:relative;width:44px;height:44px;border-radius:14px;border:0;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);display:grid;place-items:center;cursor:pointer;flex:none}
-.iconbtn.filled{background:var(--pri);color:#fff}
-.badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--heart);color:#fff;font-size:11px;font-style:normal;display:grid;place-items:center;padding:0 4px}
-.searchrow{display:flex;gap:8px}.searchbox{flex:1;display:flex;align-items:center;gap:8px;background:#fff;border-radius:14px;padding:0 12px;height:44px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.searchbox input{flex:1;border:0;outline:0;background:none;font-size:16px;height:auto;padding:0}
+.notice{font-size:11px;color:var(--mute);padding:6px 20px 0;text-align:center}
+.screen{padding:0 20px 24px;display:grid;gap:20px;align-content:start}
+.appbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;min-height:64px;padding-top:env(safe-area-inset-top);background:rgba(255,255,255,.94);backdrop-filter:blur(8px)}
+.appbar h1,.ttl h1{flex:1;margin:0;font-size:28px;font-weight:700;letter-spacing:.5px;line-height:1.2}.ttl{flex:1}.ttl span{font-size:13px;color:var(--mute)}
+.iconbtn{position:relative;width:44px;height:44px;border-radius:50%;border:0;background:none;display:grid;place-items:center;cursor:pointer;flex:none;color:var(--ink)}
+.iconbtn.filled{background:var(--surface)}.iconbtn:active{background:var(--surface)}
+.badge{position:absolute;top:4px;right:2px;min-width:16px;height:16px;border-radius:8px;background:var(--heart);color:#fff;font-size:10px;font-style:normal;display:grid;place-items:center;padding:0 4px}
+.searchrow{display:flex;gap:8px}.searchbox{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:12px;padding:0 14px;height:46px;color:var(--mute)}
+.searchbox input{flex:1;border:0;outline:0;background:none;font-size:16px;height:auto;padding:0;color:var(--ink)}
 .icon{border:0;background:none;cursor:pointer;display:flex;padding:8px;color:var(--mute)}
-.mapwrap{height:240px}.map{position:relative;width:100%;height:100%;border-radius:18px;overflow:hidden;background:#EAF0EA;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.map-bg{position:absolute;inset:0;width:100%;height:100%}.map-note{position:absolute;left:10px;bottom:8px;font-size:11px;color:#5d6d66;background:rgba(255,255,255,.85);padding:2px 8px;border-radius:999px}
-.map-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--mute)}
-.pin{position:absolute;transform:translate(-50%,-100%);border:0;background:none;padding:0;color:var(--pri);cursor:pointer;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
-.pin.sel{color:var(--heart);z-index:5}
-.popup{position:absolute;left:10px;right:10px;bottom:30px;background:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.18);z-index:6;display:grid;gap:4px}
-.count{font-weight:700;font-size:16px}
-.card{background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1.5px solid transparent;display:grid;gap:8px}
-.card.active{border-color:var(--pri)}.card-top{display:flex;justify-content:space-between;gap:8px}
-.card-name{font-weight:700}.card-sub{display:flex;align-items:center;gap:3px;color:var(--mute);font-size:13px}.svc{font-size:14px}.addr{font-size:13px;color:var(--mute)}
-.heart{border:0;background:none;cursor:pointer;color:#9AA7A1;width:44px;height:44px;margin:-8px -8px 0 0;display:grid;place-items:center;flex:none}.heart.on{color:var(--heart)}
-.tags,.chips{display:flex;flex-wrap:wrap;gap:8px}.tag{font-size:12px;padding:2px 9px;border-radius:999px;font-weight:600}
-.pay-nhi{background:#DDF1E4;color:#1F6B3E}.pay-q{background:#FFEBC2;color:#7A5200}.pay-self{background:#E8E6F6;color:#4A4290}.pay-unk{background:#ECECEC;color:#555}
-.tag.mock{background:#F1F1F1;color:#777;font-weight:500}.tag.have{background:var(--pri-soft);color:var(--pri)}.tag.none{background:#F3F3F3;color:#AAA;font-weight:400}
-.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;min-height:40px;padding:0 16px;cursor:pointer}.chip.on{background:var(--pri);border-color:var(--pri);color:#fff}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1.5px solid var(--pri);background:#fff;color:var(--pri);border-radius:14px;min-height:46px;padding:0 16px;cursor:pointer;text-decoration:none;font-weight:600}
-.btn.small{min-height:36px;padding:0 12px;justify-self:start}.btn.fav-on{background:var(--pri);color:#fff}.btn:disabled{opacity:.45;cursor:not-allowed}
-.mini{border:1.5px solid var(--line);background:#fff;border-radius:999px;min-height:36px;padding:0 12px;font-size:13px;cursor:pointer;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center}.mini.on{background:var(--pri);border-color:var(--pri);color:#fff}
-.skeleton{height:110px;background:linear-gradient(90deg,#fff,#EEF3EF,#fff);background-size:200% 100%;animation:sk 1.2s infinite}@keyframes sk{to{background-position:-200% 0}}
+.mapwrap{height:300px;margin:0 -20px}.map{position:relative;width:100%;height:100%;overflow:hidden;background:#EDEFE9}
+.map-bg{position:absolute;inset:0;width:100%;height:100%}.map-note{position:absolute;left:12px;bottom:8px;font-size:10px;color:#6f6c66;background:rgba(255,255,255,.8);padding:1px 8px;border-radius:999px}
+.map-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--mute);font-size:14px}
+.pin{position:absolute;transform:translate(-50%,-100%);border:0;background:none;padding:0;color:var(--pri);cursor:pointer;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}.pin.sel{color:var(--heart);z-index:5}
+.popup{position:absolute;left:16px;right:16px;bottom:28px;background:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 4px 18px rgba(0,0,0,.14);z-index:6;display:grid;gap:4px}
+.count{font-size:13px;color:var(--mute);margin-bottom:-12px}
+.results{display:grid}
+.card{background:none;border:0;border-radius:0;padding:0;display:grid;gap:6px}
+.results .card{padding:16px 20px;margin:0 -20px;border-bottom:1px solid var(--line);cursor:pointer}.results .card.active{background:#F8F6F2}
+.card-top{display:flex;justify-content:space-between;gap:8px}.card-name{font-weight:600;font-size:16px}.card-sub{display:flex;align-items:center;gap:3px;color:var(--mute);font-size:13px}.svc{font-size:14px;color:#5b5750}.addr{font-size:13px;color:var(--mute)}
+.heart{border:0;background:none;cursor:pointer;color:#C9C4BC;width:44px;height:44px;margin:-10px -10px 0 0;display:grid;place-items:center;flex:none}.heart.on{color:var(--heart)}
+.tags,.chips{display:flex;flex-wrap:wrap;gap:8px}.tag{font-size:11px;padding:1px 8px;border-radius:6px;font-weight:500;line-height:1.7}
+.pay-nhi{background:#E4F1E8;color:#2F6B47}.pay-q{background:#FBEFD5;color:#8A5E10}.pay-self{background:#ECEAF6;color:#524A93}.pay-unk{background:#EEECE8;color:#6b675f}
+.tag.mock{background:#EEECE8;color:#7a766f}.tag.have{background:var(--pri-soft);color:var(--pri)}.tag.none{background:none;color:#B5B0A8}
+.chip{border:1.5px solid transparent;background:var(--surface);border-radius:10px;min-height:42px;padding:0 16px;cursor:pointer;font-size:15px}.chip.on{background:var(--pri-soft);border-color:var(--pri);color:var(--pri);font-weight:600}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;background:var(--surface);color:var(--ink);border-radius:12px;min-height:48px;padding:0 20px;cursor:pointer;text-decoration:none;font-weight:500}
+.btn.small{min-height:36px;padding:0 14px}.btn.fav-on{background:var(--pri);color:#fff;font-weight:600}.btn.text{background:none;color:var(--mute)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.mini{border:0;background:none;color:var(--pri);border-radius:8px;min-height:40px;padding:0 10px;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+.mini.on{background:var(--pri-soft)}.mini.danger{color:var(--heart)}.nav3 .mini{font-size:22px;min-width:40px;justify-content:center;color:var(--ink)}
+.skeleton{height:96px;background:linear-gradient(90deg,#F5F2ED,#FAF8F5,#F5F2ED);background-size:200% 100%;animation:sk 1.2s infinite;margin:8px 0;border-radius:12px}@keyframes sk{to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.skeleton{animation:none}}
-.empty{text-align:center;padding:32px 16px;background:#fff;border-radius:16px;display:grid;gap:8px;justify-items:center}.empty p{margin:0;font-weight:600}.empty .hint{font-weight:400}
-.hint{color:var(--mute);margin:0;font-size:13px}.banner{background:#FFF4DC;color:#7A5A12;border-radius:12px;padding:8px 12px;font-size:13px}
+.empty{text-align:center;padding:40px 16px;display:grid;gap:8px;justify-items:center}.empty p{margin:0;font-weight:600}.empty .hint{font-weight:400}.empty .btn{margin-top:8px}
+.hint{color:var(--mute);margin:0;font-size:13px}.banner{background:#FBF4E6;color:#7A5A12;border-radius:12px;padding:10px 14px;font-size:13px}
 .full{position:fixed;top:0;bottom:calc(57px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg);overflow:auto;z-index:25}
-.overlay{position:fixed;inset:0;background:rgba(20,30,26,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}.overlay.center{align-items:center;padding:16px}
-.sheet,.modal{background:#fff;width:100%;max-width:480px;display:flex;flex-direction:column;overflow:hidden}
-.sheet{border-radius:24px 24px 0 0;max-height:90vh;padding-bottom:env(safe-area-inset-bottom)}.modal{border-radius:24px;max-height:calc(100vh - 32px)}
-.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 8px 4px 18px;flex:none}.sheet-head h2{margin:0;font-size:19px}
-.sheet-body{overflow:auto;padding:8px 18px 16px;display:grid;gap:14px;align-content:start;-webkit-overflow-scrolling:touch}
-.sheet-foot{display:flex;gap:10px;padding:12px 18px;border-top:1px solid var(--line);flex:none}.sheet-foot .btn{flex:1}
-.field{display:grid;gap:8px}.lbl{font-size:13px;font-weight:600;color:var(--mute)}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row2 label{display:grid;gap:4px;font-size:13px;color:var(--mute)}
-.sheet input,.sheet select,.inp{height:46px;border:1.5px solid var(--line);border-radius:12px;padding:0 12px;background:#fff;width:100%;font-size:16px}.sheet .searchbox input{border:0;height:auto;padding:0}
-.pick{display:grid;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;min-height:52px;cursor:pointer;gap:2px}.pick span{font-size:13px;color:var(--mute)}
-.picked{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--pri-soft);border-radius:12px;padding:10px 12px}
-dl{margin:0;display:grid;gap:4px}dt{font-size:13px;color:var(--mute);margin-top:8px}dd{margin:0}.note{font-size:13px;color:var(--mute)}.actions{display:grid;gap:8px}
-.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
-.bottom button{position:relative;border:0;background:none;min-height:56px;display:grid;justify-items:center;align-content:center;gap:1px;font-size:12px;color:var(--mute);cursor:pointer}.bottom button.on{color:var(--pri);font-weight:700}
-.dot{position:absolute;top:8px;left:56%;width:9px;height:9px;border-radius:50%;background:var(--heart)}
-.nav3{display:flex;align-items:center;gap:10px}.nav3.center{justify-content:center}.nav3 b{min-width:110px;text-align:center;font-size:16px}
-.calbar{display:grid;gap:10px}.seg{display:flex;background:#fff;border-radius:12px;overflow:hidden;width:fit-content;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.seg button{border:0;background:none;min-height:40px;padding:0 20px;cursor:pointer}.seg button.on{background:var(--pri);color:#fff}
-.calcard{background:#fff;border-radius:16px;padding:8px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}.mgrid.head{text-align:center;color:var(--mute);font-size:13px;padding-bottom:4px}
-.cell{height:48px;border:1.5px solid transparent;background:none;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;font-size:15px}
-.cell.dim{opacity:.35}.cell.today span{color:var(--heart);font-weight:700}.cell.sel{background:var(--pri-soft);border-color:var(--pri)}
-.dots{display:flex;gap:2px;height:6px}.dots b{width:6px;height:6px;border-radius:50%;background:var(--pri)}.dots b.done{background:#3BA66B}.dots b.missed,.dots b.cancelled{background:#B5BDB9}
-.daysec{display:grid;gap:8px}.daysec h3,.gtitle{margin:0;font-size:14px;color:var(--mute);font-weight:600}.gtitle{margin:6px 4px -4px}
-.course{display:flex;gap:12px;align-items:flex-start;background:#fff;border-radius:16px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}.course.done{box-shadow:inset 3px 0 0 #3BA66B}.course.cancelled,.course.missed{opacity:.65}
-.ctime{font-weight:700;color:var(--pri);font-size:14px;text-align:center;min-width:44px}.cbody{display:grid;gap:2px;flex:1}.cact{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.stack{display:grid;gap:4px}
-.fab{position:fixed;right:max(16px,calc(50% - 224px));bottom:calc(72px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;border:0;background:var(--pri);color:#fff;display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer;z-index:25}
-.list{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.row{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:8px 14px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;cursor:pointer}.row:last-child{border-bottom:0}
-.ico{width:34px;height:34px;border-radius:10px;background:var(--pri-soft);color:var(--pri);display:grid;place-items:center;flex:none}.tx{flex:1;font-weight:600}.tx small{display:block;color:var(--mute);font-size:13px;font-weight:400}
-.profile{grid-template-columns:auto 1fr;align-items:center;gap:12px}.avatar{width:52px;height:52px;border-radius:50%;background:var(--pri-soft);color:var(--pri);display:grid;place-items:center}
-.stats>div{display:flex;justify-content:space-between}.stats .total{border-top:1px solid var(--line);padding-top:8px;font-weight:700}
+.overlay{position:fixed;inset:0;background:rgba(30,28,25,.35);z-index:50;display:flex;align-items:flex-end;justify-content:center}.overlay.center{align-items:center;padding:20px}
+.sheet,.modal{background:#fff;width:100%;max-width:480px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -4px 30px rgba(0,0,0,.1)}
+.sheet{border-radius:20px 20px 0 0;max-height:90vh;padding-bottom:env(safe-area-inset-bottom)}.sheet::before{content:"";width:36px;height:4px;border-radius:2px;background:#DDD8D0;margin:8px auto 0;flex:none}
+.modal{border-radius:20px;max-height:calc(100vh - 40px)}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 12px 4px 20px;flex:none}.sheet-head h2{margin:0;font-size:20px;font-weight:700}
+.sheet-body{overflow:auto;padding:8px 20px 20px;display:grid;gap:20px;align-content:start;-webkit-overflow-scrolling:touch}
+.sheet-foot{display:flex;gap:8px;padding:12px 20px;flex:none}.sheet-foot .btn{flex:1}.sheet-foot .btn.text{flex:0 0 auto}
+.field{display:grid;gap:8px}.lbl{font-size:13px;color:var(--mute);font-weight:500}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.row2 label{display:grid;gap:6px;font-size:13px;color:var(--mute)}
+.timerow{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}.timerow i{color:var(--mute);font-style:normal}
+.sheet input,.sheet select,.inp{height:48px;border:0;border-radius:12px;padding:0 14px;background:var(--surface);width:100%;font-size:16px;color:var(--ink)}.sheet .searchbox input{height:auto;padding:0;background:none}
+.pick{display:grid;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:12px 0;min-height:56px;cursor:pointer;gap:2px;font-size:16px}.pick span{font-size:13px;color:var(--mute)}
+.picked{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--surface);border-radius:12px;padding:10px 14px}
+dl{margin:0;display:grid;gap:2px}dt{font-size:12px;color:var(--mute);margin-top:14px}dd{margin:0}.note{font-size:13px;color:var(--mute)}.actions{display:grid;gap:8px}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.bottom button{position:relative;border:0;background:none;min-height:56px;display:grid;justify-items:center;align-content:center;gap:2px;font-size:11px;color:#A8A39B;cursor:pointer}.bottom button.on{color:var(--pri);font-weight:600}
+.dot{position:absolute;top:8px;left:56%;width:8px;height:8px;border-radius:50%;background:var(--heart)}
+.nav3{display:flex;align-items:center;gap:4px}.nav3.center{justify-content:center}.nav3 b{min-width:120px;text-align:center;font-size:17px;font-weight:600}
+.calbar{display:grid;gap:12px}.seg{display:flex;background:var(--surface);border-radius:10px;padding:3px;width:fit-content}
+.seg button{border:0;background:none;min-height:34px;padding:0 20px;border-radius:8px;cursor:pointer;color:var(--mute);font-size:14px}.seg button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.calcard{background:none;padding:0}.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:0}.mgrid.head{text-align:center;color:var(--mute);font-size:12px;padding-bottom:6px}
+.cell{height:52px;border:0;background:none;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;font-size:16px}
+.cell span{width:30px;height:30px;display:grid;place-items:center;border-radius:50%}.cell.dim{opacity:.3}.cell.sel{background:#F4F1EC}.cell.today span{background:var(--pri);color:#fff;font-weight:600}
+.dots{display:flex;gap:3px;height:5px}.dots b{width:5px;height:5px;border-radius:50%;background:var(--pri)}.dots b.done{background:#7DB591}.dots b.missed,.dots b.cancelled{background:#CFCAC2}
+.daysec{display:grid;gap:0}.daysec h3,.gtitle{margin:0;font-size:13px;color:var(--mute);font-weight:500}.daysec h3{padding-bottom:6px}.gtitle{margin:12px 0 -12px}
+.course{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line)}.course.cancelled,.course.missed{opacity:.6}
+.ctime{font-weight:600;font-size:16px;min-width:48px;line-height:1.3}.ctime small{display:block;font-size:12px;font-weight:400;color:var(--mute)}
+.cbody{display:grid;gap:6px;flex:1}.crow{display:grid;gap:1px;cursor:pointer}.ctitle{font-weight:600;display:flex;gap:8px;align-items:center}.cact{display:flex;flex-wrap:wrap;gap:2px}.stack{display:grid;gap:4px}
+.fab{position:fixed;right:max(20px,calc(50% - 220px));bottom:calc(76px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;border:0;background:var(--pri);color:#fff;display:grid;place-items:center;box-shadow:0 6px 16px rgba(79,127,122,.4);cursor:pointer;z-index:25}
+.list{display:grid}.row{display:flex;align-items:center;gap:14px;width:100%;min-height:60px;padding:10px 0;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;cursor:pointer}
+.ico{color:var(--pri);display:grid;place-items:center;flex:none;width:24px}.tx{flex:1;font-size:16px}.tx small{display:block;color:var(--mute);font-size:13px}
+.profile{display:flex;align-items:center;gap:14px;padding:4px 0 8px}.avatar{width:56px;height:56px;border-radius:50%;background:var(--pri-soft);color:var(--pri);display:grid;place-items:center;flex:none}
+.stats{gap:0}.stats>div{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}.stats .total{font-weight:700;border-bottom:0}
 `;
 
 /* ============ 第二階段：個人化早療管理（日曆／我的） ============ */
-export const APP_NAME = "早早療", APP_VERSION = "0.3.0", VERSION_NAME = "手機 App 化介面";
+export const APP_NAME = "早早療", APP_VERSION = "0.4.0", VERSION_NAME = "視覺風格重製";
 const pad = (n) => String(n).padStart(2, "0");
 const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const parse = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
@@ -343,20 +345,23 @@ function reminderStatus(settings, sub) {
 }
 
 function CourseItem({ t, onStatus, onDelete }) {
-  const x = clinicOf(t.clinicId);
+  const x = clinicOf(t.clinicId), [open, setOpen] = useState(false);
   return (
     <div className={`course ${t.status}`}>
-      <div className="ctime">{t.start}<br />{t.end}</div>
+      <div className="ctime">{t.start}<small>{t.end}</small></div>
       <div className="cbody">
-        <b>{t.type}</b>
-        <div>{x.name}</div><div className="addr">{x.address}</div>
-        {t.note && <div className="addr">備註：{t.note}</div>}
-        <div className="cact">
+        <div className="crow" role="button" tabIndex={0} onClick={() => setOpen(!open)} onKeyDown={(e) => e.key === "Enter" && setOpen(!open)}>
+          <div className="ctitle">{t.type}{t.status !== "scheduled" && <span className={`tag ${t.status === "done" ? "pay-nhi" : "mock"}`}>{STATUS[t.status]}</span>}</div>
+          <div>{x.name}</div><div className="addr">{x.address}</div>
+          {t.note && <div className="addr">備註：{t.note}</div>}
+        </div>
+        {open && <div className="cact">
           {Object.keys(STATUS).map((k) => <button key={k} className={`mini ${t.status === k ? "on" : ""}`} onClick={() => onStatus(t.id, t.status === k ? "scheduled" : k)}>{STATUS[k]}</button>)}
           <a className="mini" target="_blank" rel="noreferrer" href={gcalUrl(t)}>加入 Google 日曆</a>
-          <button className="mini" onClick={() => onDelete(t.id)}>刪除</button>
-        </div>
+          <button className="mini danger" onClick={() => onDelete(t.id)}>刪除</button>
+        </div>}
       </div>
+      <button className="mini" onClick={() => setOpen(!open)}>{open ? "收合" : "管理"}</button>
     </div>
   );
 }
@@ -369,7 +374,7 @@ function CalendarPage({ therapies, setStatus, del, onAdd, weekStart, selDate, se
   const shift = (n) => { const d = parse(cur); if (view === "month") d.setMonth(d.getMonth() + n); else d.setDate(d.getDate() + (view === "week" ? 7 * n : n)); setSelDate(fmt(d)); };
   const weekDays = (() => { const d = parse(cur); d.setDate(d.getDate() - ((d.getDay() - weekStart + 7) % 7)); return Array.from({ length: 7 }, (_, i) => { const e = new Date(d); e.setDate(d.getDate() + i); return fmt(e); }); })();
   const cells = (() => { const f = new Date(c.getFullYear(), c.getMonth(), 1); f.setDate(1 - ((f.getDay() - weekStart + 7) % 7)); return Array.from({ length: 42 }, (_, i) => { const e = new Date(f); e.setDate(f.getDate() + i); return fmt(e); }); })();
-  const title = view === "month" ? `${c.getFullYear()}年${c.getMonth() + 1}月` : view === "week" ? `${weekDays[0].slice(5)} – ${weekDays[6].slice(5)}` : `${c.getMonth() + 1}/${c.getDate()}（${WD[c.getDay()]}）`;
+  const title = view === "month" ? `${c.getFullYear()} 年 ${c.getMonth() + 1} 月` : view === "week" ? `${weekDays[0].slice(5)} – ${weekDays[6].slice(5)}` : `${c.getMonth() + 1}/${c.getDate()}（${WD[c.getDay()]}）`;
   const Day = ({ date }) => { const d = parse(date), items = byDate[date] || []; return (
     <section className="daysec"><h3>{d.getMonth() + 1}/{d.getDate()}（{WD[d.getDay()]}）</h3>
       {items.length ? items.map((t) => <CourseItem key={t.id} t={t} onStatus={setStatus} onDelete={del} />) : <p className="hint">沒有課程</p>}</section>); };
@@ -430,13 +435,8 @@ function AddCourse({ favs, defaultDate, onSave, onClose }) {
             </div>
             <div className="field"><span className="lbl">療育類型</span>
               {clinic ? <div className="chips">{typesOf(clinic).map((t) => <Chip key={t} on={f.type === t} onClick={() => set({ type: t })}>{t}</Chip>)}</div> : <p className="hint">請先選擇機構</p>}</div>
-            <div className="field"><span className="lbl">日期與時間</span>
-              <div className="row2">
-                <label>日期<input type="date" value={f.date} onChange={(e) => set({ date: e.target.value })} /></label>
-                <label>星期<input readOnly value={f.date ? `星期${WD[parse(f.date).getDay()]}` : ""} /></label>
-                <label>開始<input type="time" value={f.start} onChange={(e) => set({ start: e.target.value })} /></label>
-                <label>結束<input type="time" value={f.end} onChange={(e) => set({ end: e.target.value })} /></label>
-              </div>{f.start >= f.end && <p className="hint">結束時間需晚於開始時間</p>}</div>
+            <div className="field"><span className="lbl">日期</span><input type="date" value={f.date} onChange={(e) => set({ date: e.target.value })} />{f.date && <span className="hint">星期{WD[parse(f.date).getDay()]}</span>}</div>
+            <div className="field"><span className="lbl">時間</span><div className="timerow"><input type="time" value={f.start} onChange={(e) => set({ start: e.target.value })} /><i>—</i><input type="time" value={f.end} onChange={(e) => set({ end: e.target.value })} /></div>{f.start >= f.end && <p className="hint">結束時間需晚於開始時間</p>}</div>
             <div className="field"><span className="lbl">重複</span>
               <div className="row2">
                 <label>頻率<select value={f.repeat} onChange={(e) => set({ repeat: e.target.value })}><option value="none">單次</option><option value="weekly">每週</option><option value="biweekly">每兩週</option></select></label>
@@ -444,7 +444,7 @@ function AddCourse({ favs, defaultDate, onSave, onClose }) {
               </div></div>
             <div className="field"><span className="lbl">備註</span><input value={f.note} onChange={(e) => set({ note: e.target.value })} placeholder="選填" /></div>
           </div>
-          <div className="sheet-foot"><button className="btn" onClick={onClose}>取消</button><button className="btn fav-on" disabled={!valid} onClick={save}>新增課程</button></div>
+          <div className="sheet-foot"><button className="btn text" onClick={onClose}>取消</button><button className="btn fav-on" disabled={!valid} onClick={save}>新增課程</button></div>
         </>)}
       </div>
     </div>
@@ -494,7 +494,7 @@ function MePage({ settings, setSettings, records, sub, setSub, therapies, setSta
   return (
     <main className="screen">
       <div className="appbar"><h1>我的</h1></div>
-      <div className="card profile"><span className="avatar"><User size={26} /></span><div><b>{settings.name || "早早療使用者"}</b><div className="addr">{APP_NAME} v{APP_VERSION}｜{VERSION_NAME}</div></div></div>
+      <div className="profile"><span className="avatar"><User size={26} /></span><div><b>{settings.name || "早早療使用者"}</b><div className="addr">{APP_NAME} v{APP_VERSION}｜{VERSION_NAME}</div></div></div>
       <div className="gtitle">療育</div>
       <div className="list"><Row icon={CalendarDays} title="我的早療課程" sub={`${upcoming.length} 堂待上`} onClick={() => setPg("courses")} />
         <Row icon={ClipboardList} title="療育紀錄" sub={`${month.replace("-", "年")}月`} onClick={() => setPg("records")} />
@@ -527,7 +527,7 @@ export default function App() {
   return (
     <div className="app">
       <style>{CSS}</style>
-      <div className="notice">目前顯示的皆為測試用 mock data，不代表真實院所資料。</div>
+      <div className="notice">測試資料・非真實院所資訊</div>
       {page === "map" && <MapPage favs={favs} toggleFav={toggleFav} />}
       {page === "cal" && <CalendarPage therapies={myTherapies} setStatus={setStatus} del={del} onAdd={() => setAdding(true)} weekStart={settings.weekStart} selDate={selDate} setSelDate={setSelDate} />}
       {page === "me" && <MePage settings={settings} setSettings={setSettings} records={therapyRecords} sub={subsidyReminders} setSub={setSub} therapies={myTherapies} setStatus={setStatus} del={del} />}
